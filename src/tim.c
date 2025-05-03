@@ -54,91 +54,9 @@ extern volatile unsigned short v_pwm[];
 
 
 // Globals ---------------------------------------------------------------------
-volatile unsigned short timer_1000 = 0;
-volatile unsigned char new_sample = 0;
-
-const unsigned short sin16 [] = {  256, 354, 436, 492, 511, 492, 436, 354,
-                                   256, 158, 76, 20, 1, 20, 76, 158 };
-
-// const short sin16_short [] = {  0, 98, 180, 236, 255, 236, 180, 98,
-//                                 0, -98, -180, -236, -255, -236, -180, -98 };
-
-const short sin16_short [] = {  0, 12539, 23170, 30273, 32767, 30273, 23170, 12539,
-                                0, -12539, -23170, -30273, -32767, -30273, -23170, -12539 };
-
-const short sin40_short [] = {  0, 5126, 10126, 14876, 19260, 23170, 26509, 29196,
-                                31163, 32364, 32767, 32364, 31163, 29196, 26509, 23170,
-                                19260, 14876, 10126, 5126, 0, -5126, -10126, -14876,
-                                -19260, -23170, -26509, -29196, -31163, -32364, -32767, -32364,
-                                -31163, -29196, -26509, -23170, -19260, -14876, -10126, -5126 };
-
-unsigned char sample_index = 0;
-#define SAMPLE_MAX_INDEX	40
 
 
-/* Module Functions ------------------------------------------------------------*/
-void LoadSine(short * v)
-{
-	unsigned char i;
-
-	for (i = 0; i < 16; i++)
-	{
-		if (sample_index < SAMPLE_MAX_INDEX)
-		{
-			*(v+i) = sin40_short[sample_index];
-			sample_index++;
-		}
-		else
-		{
-			*(v+i) = sin40_short[0];
-			sample_index = 1;
-		}
-	}
-}
-
-inline void Power_Ampli_Ena (void)
-{
-	//hab general de OC
-	TIM1->BDTR |= TIM_BDTR_MOE;
-	TIM1->CR1 |= TIM_CR1_CEN;
-}
-
-void Ampli_to_Audio (void)
-{
-	TIM1->CR1 &= ~TIM_CR1_CEN;
-
-	TIM1->ARR = 511;
-	TIM1->CNT = 0;
-	TIM1->PSC = 5;	//prescaler divido 48MHz / (1 + 5)
-	// Enable timer ver UDIS
-	TIM1->DIER |= TIM_DIER_UIE;
-	TIM1->CR1 |= TIM_CR1_CEN;
-}
-
-void Ampli_to_Sirena (void)
-{
-	TIM1->CR1 &= ~TIM_CR1_CEN;
-
-	TIM1->ARR = TIM1_ARR;
-	TIM1->CNT = 0;
-	TIM1->PSC = 47;	//prescaler divido 48MHz / (1 + 47)
-
-	TIM1->DIER &= ~TIM_DIER_UIE;
-	TIM1->CR1 |= TIM_CR1_CEN;
-}
-
-inline void Power_Ampli_Disa (void)
-{
-	//hab general de OC
-	TIM1->BDTR &= 0x7FFF;
-	TIM1->CR1 &= ~TIM_CR1_CEN;
-}
-
-void ChangeAmpli(unsigned short freq, unsigned short pwm)
-{
-	TIM1->ARR = freq;
-	TIM1->CCR1 = pwm;
-}
+// Module Functions ------------------------------------------------------------
 
 void Update_TIM1_CH1 (unsigned short a)
 {
@@ -167,88 +85,88 @@ void TIM3_IRQHandler (void)	//1 ms
 
 	// Usart_Time_1ms ();
 
-	if (timer_1seg)
-	{
-		if (timer_1000)
-			timer_1000--;
-		else
-		{
-			timer_1seg--;
-			timer_1000 = 1000;
-		}
-	}
+	// if (timer_1seg)
+	// {
+	// 	if (timer_1000)
+	// 		timer_1000--;
+	// 	else
+	// 	{
+	// 		timer_1seg--;
+	// 		timer_1000 = 1000;
+	// 	}
+	// }
 
-	if (timer_led_comm)
-		timer_led_comm--;
+	// if (timer_led_comm)
+	// 	timer_led_comm--;
 
-	if (timer_standby)
-		timer_standby--;
+	// if (timer_standby)
+	// 	timer_standby--;
 
 	//bajar flag
 	if (TIM3->SR & 0x01)	//bajo el flag
 		TIM3->SR = 0x00;
 }
 
-void TIM1_BRK_UP_TRG_COM_IRQHandler (void)	//16KHz
-{
-	//cuando arranca siempre in_buff == 1;
-	if (buff_in_use == 1)
-	{
-		if (new_sample < 16)
-		{
-			//v_pwm[new_sample] = (v_samples1[new_sample] >> 7) + 256;
-			//TIM1->CCR1 = v_pwm[new_sample];
-			TIM1->CCR1 = (v_samples1[new_sample] >> 7) + 256;
-			new_sample++;
-		}
-		else
-		{
-			//tengo que cambiar de buffer
-			buff_in_use = 2;
-			update_samples++;
-			TIM1->CCR1 = (v_samples2[0] >> 7) + 256;
-			new_sample = 1;
-		}
-	}
-	else if (buff_in_use == 2)
-	{
-		if (new_sample < 16)
-		{
-			//v_pwm[new_sample] = (v_samples2[new_sample] >> 7) + 256;
-			//TIM1->CCR1 = v_pwm[new_sample];
-			TIM1->CCR1 = (v_samples2[new_sample] >> 7) + 256;
-			new_sample++;
-		}
-		else
-		{
-			//tengo que cambiar de buffer
-			buff_in_use = 1;
-			update_samples++;
-			//v_pwm[0] = (v_samples1[0] >> 7) + 256;
-			//TIM1->CCR1 = v_pwm[0];
-			TIM1->CCR1 = (v_samples1[0] >> 7) + 256;
-			new_sample = 1;
-		}
-	}
+// void TIM1_BRK_UP_TRG_COM_IRQHandler (void)	//16KHz
+// {
+// 	//cuando arranca siempre in_buff == 1;
+// 	if (buff_in_use == 1)
+// 	{
+// 		if (new_sample < 16)
+// 		{
+// 			//v_pwm[new_sample] = (v_samples1[new_sample] >> 7) + 256;
+// 			//TIM1->CCR1 = v_pwm[new_sample];
+// 			TIM1->CCR1 = (v_samples1[new_sample] >> 7) + 256;
+// 			new_sample++;
+// 		}
+// 		else
+// 		{
+// 			//tengo que cambiar de buffer
+// 			buff_in_use = 2;
+// 			update_samples++;
+// 			TIM1->CCR1 = (v_samples2[0] >> 7) + 256;
+// 			new_sample = 1;
+// 		}
+// 	}
+// 	else if (buff_in_use == 2)
+// 	{
+// 		if (new_sample < 16)
+// 		{
+// 			//v_pwm[new_sample] = (v_samples2[new_sample] >> 7) + 256;
+// 			//TIM1->CCR1 = v_pwm[new_sample];
+// 			TIM1->CCR1 = (v_samples2[new_sample] >> 7) + 256;
+// 			new_sample++;
+// 		}
+// 		else
+// 		{
+// 			//tengo que cambiar de buffer
+// 			buff_in_use = 1;
+// 			update_samples++;
+// 			//v_pwm[0] = (v_samples1[0] >> 7) + 256;
+// 			//TIM1->CCR1 = v_pwm[0];
+// 			TIM1->CCR1 = (v_samples1[0] >> 7) + 256;
+// 			new_sample = 1;
+// 		}
+// 	}
 
 
-	/*
-	if (new_sample < 16)
-	{
-		TIM1->CCR1 = sin16[new_sample];
-		new_sample++;
-	}
-	else
-	{
-		TIM1->CCR1 = sin16[0];
-		new_sample = 1;
-	}
-	*/
-	//bajar flag
-	if (TIM1->SR & 0x01)	//bajo el flag
-		TIM1->SR = 0x00;
+// 	/*
+// 	if (new_sample < 16)
+// 	{
+// 		TIM1->CCR1 = sin16[new_sample];
+// 		new_sample++;
+// 	}
+// 	else
+// 	{
+// 		TIM1->CCR1 = sin16[0];
+// 		new_sample = 1;
+// 	}
+// 	*/
+// 	//bajar flag
+// 	if (TIM1->SR & 0x01)	//bajo el flag
+// 		TIM1->SR = 0x00;
 
-}
+// }
 
 void TIM_1_Init (void)
 {
@@ -379,7 +297,7 @@ void TIM14_IRQHandler (void)	//100uS
 	if ((TIM14->SR & 0x02) != 0)
 	{
 		//ver pag 356
-		Timer_Interrupt_Handler (TIM14->CCR1);
+		// Timer_Interrupt_Handler (TIM14->CCR1);
 		TIM14->SR = 0x00;
 	}
 }

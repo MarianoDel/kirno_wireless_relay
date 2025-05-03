@@ -72,24 +72,13 @@ SRC += $(BOOTDIR)/syscalls/syscalls.c
 SRC += ./src/it.c
 SRC += ./src/gpio.c
 SRC += ./src/tim.c
-SRC += ./src/spi.c
-SRC += ./src/sst25.c
-SRC += ./src/comm.c
-SRC += ./src/usart.c
-SRC += ./src/rws317.c
-SRC += ./src/flash_program.c
-SRC += ./src/sst25codes.c
-SRC += ./src/display_7seg.c
-SRC += ./src/keypad.c
-SRC += ./src/gestion.c
+# SRC += ./src/usart.c
+# SRC += ./src/rws317.c
+# SRC += ./src/flash_program.c
 SRC += ./src/hard.c
 SRC += ./src/porton_kirno.c
 SRC += ./src/codes.c
-SRC += ./src/factory_test.c
-SRC += ./src/send_segments.c
-## TODO: para nuevo codigo, no funciona bien
-# SRC += ./src/func_alarm.c
-# SRC += ./src/outputs.c
+SRC += ./src/test_functions.c
 
 
 ## Core Support

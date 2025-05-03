@@ -1,5 +1,4 @@
 //------------------------------------------------------
-// #### PROYECTO PANEL ALARMA VAPORE - Custom Board ####
 // ##
 // ## @Author: Med
 // ## @Editor: Emacs - ggtags
@@ -12,9 +11,9 @@
 #include "porton_kirno.h"
 #include "hard.h"
 #include "stm32f0xx.h"
-#include "usart.h"
+// #include "usart.h"
 #include "tim.h"
-#include "display_7seg.h"
+// #include "display_7seg.h"
 #include "codes.h"
 
 #include <stdio.h>
@@ -43,15 +42,15 @@ void FuncPortonKirno (void)
     resp_t resp = resp_continue;
     
 
-    Usart1Send((char *) "Programa de Porton Kirno - Hard Vapore Keypad\r\n");
+    // Usart1Send((char *) "Programa de Porton Kirno - Hard Vapore Keypad\r\n");
 
     //reset a la SM del display
-    Display_ResetSM();
+    // Display_ResetSM();
     //apago el display
-    Display_ShowNumbers(DISPLAY_PROG);
+    // Display_ShowNumbers(DISPLAY_PROG);
     // Display_ShowNumbers(DISPLAY_NONE);
     
-    BuzzerCommands(BUZZER_LONG_CMD, 2);
+    // BuzzerCommands(BUZZER_LONG_CMD, 2);
 
     TIM_16_Init();
 
@@ -75,7 +74,7 @@ void FuncPortonKirno (void)
                         my_codes.code,
                         my_codes.lambda,
                         my_codes.bits);
-                Usart1Send(s_send);
+                // Usart1Send(s_send);
 
 #ifdef USE_KIRNO_CODES                
                 //chequeo parametros del codigo y activo
@@ -104,7 +103,7 @@ void FuncPortonKirno (void)
                     {
                         porton_state = PK_OUTPUT_TO_DELAY_ACTIVATE;
                         timer_standby = 10000;    // wait 10 secs
-                        Usart1Send("Delay output for 10 secs\n");
+                        // Usart1Send("Delay output for 10 secs\n");
                         siren_timeout = 0;
                     }
                 }                
@@ -120,16 +119,16 @@ void FuncPortonKirno (void)
 
             if (!siren_timeout)
             {
-                BuzzerCommands(BUZZER_SHORT_CMD, 1);
+                // BuzzerCommands(BUZZER_SHORT_CMD, 1);
                 siren_timeout = 1000;
             }
             break;
 
         case PK_OUTPUT_TO_ACTIVATE:
-            FPLUS_ON;
+            // FPLUS_ON;
             minutes = 5;
             siren_timeout = 0;
-            Usart1Send("Output is ON for 5 minutes\n");
+            // Usart1Send("Output is ON for 5 minutes\n");
             porton_state = PK_OUTPUT_ACTIVE;
             break;
             
@@ -143,19 +142,19 @@ void FuncPortonKirno (void)
                 }
                 else
                 {
-                    FPLUS_OFF;
-                    BuzzerCommands(BUZZER_LONG_CMD, 3);
-                    timer_standby = 3000;
-                    Usart1Send("Output is OFF\n");
+                    // FPLUS_OFF;
+                    // BuzzerCommands(BUZZER_LONG_CMD, 3);
+                    // timer_standby = 3000;
+                    // Usart1Send("Output is OFF\n");
                     porton_state = PK_INIT;
                 }
             }
 
-            if ((FPLUS) && (!siren_timeout))
-            {
-                siren_timeout = 5000;
-                BuzzerCommands(BUZZER_HALF_CMD, 2);
-            }
+            // if ((FPLUS) && (!siren_timeout))
+            // {
+                // siren_timeout = 5000;
+                // BuzzerCommands(BUZZER_HALF_CMD, 2);
+            // }
             break;
             
 
@@ -164,7 +163,7 @@ void FuncPortonKirno (void)
             break;
 
         }
-        UpdateBuzzer();
+        // UpdateBuzzer();
     }
 }
 
@@ -252,7 +251,7 @@ resp_t PortonKirnoCodes (porton_kirno_codes_t * new_code_st)
                     new_lambda,
                     i);
 
-            Usart1Send(s_buf);
+            // Usart1Send(s_buf);
             new_code_st->bits = i;
             new_code_st->code = new_code;
             new_code_st->lambda = new_lambda;
@@ -286,7 +285,7 @@ resp_t PortonKirnoCodes (porton_kirno_codes_t * new_code_st)
             sprintf(s_buf, "code error\n");
         }
 
-        Usart1Send(s_buf);
+        // Usart1Send(s_buf);
         kc_state = KC_WAIT_SILENCE_INIT;
         break;
             
