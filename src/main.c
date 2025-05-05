@@ -8,7 +8,7 @@
 // #### MAIN.C #########################################
 //------------------------------------------------------
 
-/* Includes ------------------------------------------------------------------*/
+// Includes --------------------------------------------------------------------
 #include "stm32f0xx.h"
 #include "hard.h"
 #include "gpio.h"
@@ -24,15 +24,12 @@
 #include <string.h>
 #include "it.h"
 
-#include "gestion.h"
-#include "porton_kirno.h"
-// #include "factory_test.h"
+// #include "gestion.h"
+#include "manager.h"
+#include "programing.h"
 
-//TODO: para pruebas nuevo soft
-// #include "func_alarm.h"
-//FIN: para pruebas nuevo soft
 
-/* Externals ------------------------------------------------------------------*/
+// Externals -------------------------------------------------------------------
 // ------- Externals para timers -------
 // volatile unsigned char timer_1seg = 0;
 volatile unsigned short timer_standby = 0;
@@ -166,9 +163,20 @@ int main(void)
         SysTickError();
 
     // Hardware Tests
-    TF_Hardware_Tests ();
+    // TF_Hardware_Tests ();
 
     // --- main program inits. ---
+    // RxCode();    // stop ints
+    // TIM_14_Init();
+
+    while (1)
+    {
+	if (Check_Sw_Learn() > SW_NO)
+	    Programing();
+	
+	// FuncPortonKirno();
+    }
+    
 // #ifdef HARDWARE_VERSION_2_0
 //     // --- start peripherals
 //     // Init ADC with DMA
@@ -253,26 +261,13 @@ int main(void)
 //     //--- EMPIEZO PROGRAMA DE PORTON KIRNO  ---//
 // #ifdef PROGRAMA_PORTON_KIRNO
 
-//     FuncPortonKirno();
+
 
 // #endif
 //     //--- FIN PROGRAMA DE PORTON KIRNO ---//    
     
     
 
-    while (1)
-    {
-
-//         UpdateBuzzer();
-//         Display_UpdateSM();
-//         UpdateSiren();
-//         UpdateAudio();
-// #ifdef CON_MODIFICACION_DIODO_BATERIA
-//         UpdateBattery();
-// #endif
-//         //OJO esta rutina puede cambiar el estado del programa principal
-//         main_state = UpdateUart(main_state);
-    }
 
     return 0;
     
@@ -292,6 +287,7 @@ void TimingDelay_Decrement(void)
     if (pilot_code)
         pilot_code--;
 
+    Hard_Timeouts ();
     // if (wait_for_code_timeout)
     //     wait_for_code_timeout--;
 

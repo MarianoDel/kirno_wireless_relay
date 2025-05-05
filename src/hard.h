@@ -11,6 +11,16 @@
 #define _HARD_H_
 
 
+// Module Exported Types Constants and Macros ----------------------------------
+typedef enum {
+    SW_NO = 0,
+    SW_MIN,
+    SW_HALF,
+    SW_FULL
+    
+} resp_sw_t;
+
+
 //----------- Defines For Configuration -------------
 
 
@@ -88,6 +98,11 @@ unsigned char Led_Is_On (void);
 void Led_On (void);
 void Led_Off (void);
 unsigned char Sw_Learn_Is_On (void);
+void Hard_Timeouts (void);
+resp_sw_t Check_Sw_Learn (void);
+
+void Hard_Led_Change_Bips (unsigned char how_many);
+void Hard_Led_Blinking_Update (void);
 
 
 #endif /* _HARD_H_ */

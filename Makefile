@@ -76,8 +76,9 @@ SRC += ./src/tim.c
 # SRC += ./src/rws317.c
 # SRC += ./src/flash_program.c
 SRC += ./src/hard.c
-SRC += ./src/porton_kirno.c
+SRC += ./src/manager.c
 SRC += ./src/codes.c
+SRC += ./src/programing.c
 SRC += ./src/test_functions.c
 
 
