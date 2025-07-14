@@ -36,6 +36,8 @@ unsigned short s1_cntr = 0;
 led_state_t led_state = START_BLINKING;
 unsigned char blink = 0;
 unsigned char how_many_blinks = 0;
+unsigned short timer_led_on = 0;
+unsigned short timer_led_off = 0;
 volatile unsigned short timer_led = 0;
 
 
@@ -103,9 +105,13 @@ resp_sw_t Check_Sw_Learn (void)
 
 
 // change led bips
-void Hard_Led_Change_Bips (unsigned char how_many)
+void Hard_Led_Change_Bips (unsigned char how_many,
+			   unsigned short timer_on,
+			   unsigned short timer_off)
 {
     how_many_blinks = how_many;
+    timer_led_on = timer_on;
+    timer_led_off = timer_off;
     led_state = START_BLINKING;
 }
 
@@ -121,7 +127,7 @@ void Hard_Led_Blinking_Update (void)
             if (blink)
             {
                 LED_ON;
-                timer_led = 200;
+                timer_led = timer_led_on;
                 led_state++;
                 blink--;
             }
@@ -131,7 +137,7 @@ void Hard_Led_Blinking_Update (void)
             if (!timer_led)
             {
                 LED_OFF;
-                timer_led = 200;
+                timer_led = timer_led_on;
                 led_state++;
             }
             break;
@@ -142,14 +148,14 @@ void Hard_Led_Blinking_Update (void)
                 if (blink)
                 {
                     blink--;
-                    timer_led = 200;
+                    timer_led = timer_led_on;
                     led_state = WAIT_TO_OFF;
                     LED_ON;
                 }
                 else
                 {
                     led_state = WAIT_NEW_CYCLE;
-                    timer_led = 2000;
+                    timer_led = timer_led_off;
                 }
             }
             break;
@@ -166,65 +172,75 @@ void Hard_Led_Blinking_Update (void)
     }
 }
 
-// void OnOff_On (void)
-// {
-//     ON_OFF_ON;
-// }
+
+void Relay_Ch1_On (void)
+{
+    ACT_CH1_ON;
+}
 
 
-// void OnOff_Off (void)
-// {
-//     ON_OFF_OFF;
-// }
-
-// #endif
-
-// #ifdef HARDWARE_VERSION_1_0
-// void Ena_Ch1_On (void)
-// {
-//     ENA_CH1_ON;
-// }
+void Relay_Ch2_On (void)
+{
+    ACT_CH2_ON;
+}
 
 
-// void Ena_Ch2_On (void)
-// {
-//     ENA_CH2_ON;
-// }
-
-
-// void Ena_Ch3_On (void)
-// {
-//     ENA_CH3_ON;
-// }
+void Relay_Ch3_On (void)
+{
+    ACT_CH3_ON;
+}
     
-// void Ena_Ch4_On (void)
-// {
-//     ENA_CH4_ON;
-// }
+void Relay_Ch4_On (void)
+{
+    ACT_CH4_ON;
+}
 
 
-// void Ena_Ch1_Off (void)
-// {
-//     ENA_CH1_OFF;
-// }
+void Relay_Ch1_Off (void)
+{
+    ACT_CH1_OFF;
+}
 
 
-// void Ena_Ch2_Off (void)
-// {
-//     ENA_CH2_OFF;
-// }
+void Relay_Ch2_Off (void)
+{
+    ACT_CH2_OFF;
+}
 
 
-// void Ena_Ch3_Off (void)
-// {
-//     ENA_CH3_OFF;
-// }
+void Relay_Ch3_Off (void)
+{
+    ACT_CH3_OFF;
+}
 
 
-// void Ena_Ch4_Off (void)
-// {
-//     ENA_CH4_OFF;
-// }
+void Relay_Ch4_Off (void)
+{
+    ACT_CH4_OFF;
+}
+
+
+unsigned char Relay_Ch1_Is_On (void)
+{
+    return ACT_CH1;
+}
+
+
+unsigned char Relay_Ch2_Is_On (void)
+{
+    return ACT_CH2;
+}
+
+
+unsigned char Relay_Ch3_Is_On (void)
+{
+    return ACT_CH3;
+}
+    
+unsigned char Relay_Ch4_Is_On (void)
+{
+    return ACT_CH4;
+}
 
 
 //--- end of file ---//

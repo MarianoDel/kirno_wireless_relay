@@ -12,13 +12,7 @@
 
 
 // Module Exported Types Constants and Macros ----------------------------------
-typedef enum {
-    SW_NO = 0,
-    SW_MIN,
-    SW_HALF,
-    SW_FULL
-    
-} resp_sw_t;
+#include "switches_answers.h"
 
 
 //----------- Defines For Configuration -------------
@@ -101,8 +95,23 @@ unsigned char Sw_Learn_Is_On (void);
 void Hard_Timeouts (void);
 resp_sw_t Check_Sw_Learn (void);
 
-void Hard_Led_Change_Bips (unsigned char how_many);
 void Hard_Led_Blinking_Update (void);
+void Hard_Led_Change_Bips (unsigned char how_many,
+			   unsigned short timer_on,
+			   unsigned short timer_off);
+
+void Relay_Ch1_On (void);
+void Relay_Ch2_On (void);
+void Relay_Ch3_On (void);
+void Relay_Ch4_On (void);
+void Relay_Ch1_Off (void);
+void Relay_Ch2_Off (void);
+void Relay_Ch3_Off (void);
+void Relay_Ch4_Off (void);
+unsigned char Relay_Ch1_Is_On (void);
+unsigned char Relay_Ch2_Is_On (void);
+unsigned char Relay_Ch3_Is_On (void);
+unsigned char Relay_Ch4_Is_On (void);
 
 
 #endif /* _HARD_H_ */

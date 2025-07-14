@@ -12,282 +12,234 @@
 #include "hard.h"
 #include "stm32f0xx.h"
 #include "tim.h"
-#include "codes.h"
+#include "rf_rx_codes.h"
+#include "programming.h"
+#include "parameters.h"
 
 #include <stdio.h>
 
-#define OCODE_ON    LED_ON
-#define OCODE_OFF    LED_OFF
+
+// Private Types Constants and Macros ------------------------------------------
+typedef enum {
+    MANAGER_INIT,
+    MANAGER_RUNNING,
+    MANAGER_PROGRAMMING
+    
+} manager_sm_e;
+
+
+typedef enum {
+    MANAGER_MODE_KEY = 0,
+    MANAGER_MODE_PULSED,
+    MANAGER_MODE_SWITCH,
+    MANAGER_MODE_TIMER
+    
+} manager_mode_e;
+
 
 // Externals -------------------------------------------------------------------
-extern volatile unsigned short timer_standby;
+extern parameters_typedef mem_conf;
 
 
 // Globals ---------------------------------------------------------------------
-manager_sm_t porton_state = PK_INIT;
-unsigned char minutes = 0;
+manager_sm_e manager_state = MANAGER_INIT;
+unsigned char manager_mode = 0;
+
+volatile unsigned short manager_relay_1 = 0;
+volatile unsigned short manager_relay_2 = 0;
+volatile unsigned short manager_relay_3 = 0;
+volatile unsigned short manager_relay_4 = 0;
 
 
 // Private Module Functions ----------------------------------------------------
-resp_t Manager_Codes (manager_codes_t *);
+void Manager_Change_Relay (unsigned char code_getted,
+			   unsigned char mode,
+			   rf_rx_codes_t * rx_code);
+
+void Manager_Key_SM (unsigned char code_getted, rf_rx_codes_t * rx_code);
+void Manager_Pulsed_SM (unsigned char code_getted, rf_rx_codes_t * rx_code);
+void Manager_Switch_SM (unsigned char code_getted, rf_rx_codes_t * rx_code);
+void Manager_Timer_SM (unsigned char code_getted, rf_rx_codes_t * rx_code);
+
+void Manager_Key_SM_Reset (void);
+void Manager_Pulsed_SM_Reset (void);
+void Manager_Switch_SM_Reset (void);
+void Manager_Timer_SM_Reset (void);
 
 
 // Module Functions ------------------------------------------------------------
+void Manager_Timeouts (void)
+{
+    if (manager_relay_1)
+	manager_relay_1--;
+
+    if (manager_relay_2)
+	manager_relay_2--;
+
+    if (manager_relay_3)
+	manager_relay_3--;
+
+    if (manager_relay_4)
+	manager_relay_4--;
+    
+    
+}
+
+
 void Manager (void)
 {
-    manager_codes_t my_codes;
+    rf_rx_codes_t new_code;
     resp_t resp = resp_continue;
-    char s_send [100];
+    unsigned char code_getted = 0;
 
-    // Usart1Send((char *) "Programa de Porton Kirno - Hard Vapore Keypad\r\n");
-
-    //reset a la SM del display
-    // Display_ResetSM();
-    //apago el display
-    // Display_ShowNumbers(DISPLAY_PROG);
-    // Display_ShowNumbers(DISPLAY_NONE);
-    
-    // BuzzerCommands(BUZZER_LONG_CMD, 2);
-
-    TIM_16_Init();
-
-    
     while (1)
     {
-        switch (porton_state)
-        {
-        case PK_INIT:
-            if (!timer_standby)
-                porton_state = PK_STAND_BY;
+	switch (manager_state)
+	{
+	case MANAGER_INIT:
+	    Hard_Led_Change_Bips ((manager_mode + 1), 200, 4000);
 
-            break;
+	    Manager_Key_SM_Reset ();
+	    Manager_Pulsed_SM_Reset ();
+	    Manager_Switch_SM_Reset ();
+	    Manager_Timer_SM_Reset ();
+	    code_getted = 0;
+	    
+	    manager_state = MANAGER_RUNNING;
+	    break;
 
-        case PK_STAND_BY:
-            resp = Manager_Codes (&my_codes);
-            
-            if (resp == resp_ok)
-            {
-                sprintf(s_send, "finded! rxcode: 0x%x rxlambda: %d rxbits: %d\n",
-                        my_codes.code,
-                        my_codes.lambda,
-                        my_codes.bits);
-                // Usart1Send(s_send);
+	case MANAGER_RUNNING:
+	    Hard_Led_Blinking_Update ();
 
-#ifdef USE_KIRNO_CODES                
-                //chequeo parametros del codigo y activo
-                if ((my_codes.bits == 28) &&
-                    (my_codes.lambda > 300) &&
-                    (my_codes.lambda < 330))
-                {
-                    // control 1 B3 y B4
-                    // control 2 B3 y B4
-                    if ((my_codes.code == 0x63d1f45) ||
-                        (my_codes.code == 0x63d1f15) ||
-                        (my_codes.code == 0x7401045) ||
-                        (my_codes.code == 0x7401015))
-                    {
-                        porton_state = PK_OUTPUT_TO_ACTIVATE;                        
-                    }
-                }
-#endif
-#ifdef USE_MEMB_CODES
-                if ((my_codes.bits == 12) &&
-                    (my_codes.lambda > 440) &&
-                    (my_codes.lambda < 500))
-                {
-                    // controls B1
-                    if (my_codes.code == 0x1)
-                    {
-                        porton_state = PK_OUTPUT_TO_DELAY_ACTIVATE;
-                        timer_standby = 10000;    // wait 10 secs
-                        // Usart1Send("Delay output for 10 secs\n");
-                        siren_timeout = 0;
-                    }
-                }                
-#endif
-            }
-            break;
+	    resp = Rf_Get_Codes (&new_code);
+	    if (resp == resp_ok)
+		code_getted = 1;
 
-        case PK_OUTPUT_TO_DELAY_ACTIVATE:
-            if (!timer_standby)
-            {
-                porton_state = PK_OUTPUT_TO_ACTIVATE;                
-            }
+	    Manager_Change_Relay (code_getted, manager_mode, &new_code);
+	    code_getted = 0;
+	    
+	    if (Check_Sw_Learn() > SW_NO)
+	    {
+		Programming_Reset ();
+		manager_state = MANAGER_PROGRAMMING;
+	    }
+	    break;
+	    
+	case MANAGER_PROGRAMMING:
+	    resp = Programming ();
+	    if (resp == resp_ok)
+	    {
+		manager_state = MANAGER_INIT;
+	    }
+	    break;
 
-            break;
-
-        case PK_OUTPUT_TO_ACTIVATE:
-            // FPLUS_ON;
-            minutes = 5;
-
-            // Usart1Send("Output is ON for 5 minutes\n");
-            porton_state = PK_OUTPUT_ACTIVE;
-            break;
-            
-        case PK_OUTPUT_ACTIVE:
-            if (!timer_standby)
-            {
-                if (minutes)
-                {
-                    minutes--;
-                    timer_standby = 60000;
-                }
-                else
-                {
-                    // FPLUS_OFF;
-                    // BuzzerCommands(BUZZER_LONG_CMD, 3);
-                    // timer_standby = 3000;
-                    // Usart1Send("Output is OFF\n");
-                    porton_state = PK_INIT;
-                }
-            }
-
-            // if ((FPLUS) && (!siren_timeout))
-            // {
-                // siren_timeout = 5000;
-                // BuzzerCommands(BUZZER_HALF_CMD, 2);
-            // }
-            break;
-            
-
-        default:
-            porton_state = PK_INIT;
-            break;
-
-        }
-        // UpdateBuzzer();
+	default:
+	    manager_state = MANAGER_INIT;
+	    break;
+	}
     }
 }
 
-typedef enum {
-    KC_WAIT_SILENCE_INIT,
-    KC_WAIT_SILENCE,
-    KC_RX,
-    KC_GET_CODE_HT,
-    KC_GET_CODE_PT_EV
-    
-} kirno_codes_t;
 
-kirno_codes_t kc_state = KC_WAIT_SILENCE_INIT;
-
-unsigned char i = 0;
-resp_t Manager_Codes (manager_codes_t * new_code_st)
+void Manager_Change_Relay (unsigned char code_getted,
+			   unsigned char mode,
+			   rf_rx_codes_t * rx_code)
 {
-    unsigned int new_code = 0;
-    unsigned short new_lambda = 0;
-    char s_buf [100] = { 0 };
-    resp_t resp = resp_continue;
-
-    
-    switch (kc_state)
+    switch (mode)
     {
-    case KC_WAIT_SILENCE_INIT:
-        CodesWaitFiveReset();
-        kc_state++;
-        break;
-            
-    case KC_WAIT_SILENCE:
+    case MANAGER_MODE_KEY:
+	Manager_Key_SM (code_getted, rx_code);
+	break;
 
-        resp = CodesWaitFive();
+    case MANAGER_MODE_PULSED:
+	Manager_Pulsed_SM (code_getted, rx_code);	
+	break;
 
-        if (resp == resp_ok)
-        {
-            //estuve 5ms sin nada
-            LED_ON;
-            OCODE_ON;
+    case MANAGER_MODE_SWITCH:
+	Manager_Switch_SM (code_getted, rx_code);	
+	break;
 
-            kc_state = KC_RX;
-            // Usart1Send((char *) "nuevo header\n");
-            CodesRecvCode16Reset();
-            resp = resp_continue;
-        }
-
-        if (resp == resp_error)
-            kc_state = KC_WAIT_SILENCE_INIT;
-            
-        break;
-
-    case KC_RX:
-        resp = CodesRecvCode16(&i);
-
-        if (resp != resp_continue)
-        {
-            if (resp == resp_ok)
-            {
-                // sprintf(s_buf, "bits: %d OK\n", i);
-                // Usart1Send(s_buf);
-                kc_state = KC_GET_CODE_HT;
-                resp = resp_continue;
-            }
-
-            if (resp == resp_error)
-            {
-                // for debug, shows how many bits gets
-                // sprintf(s_buf, "bits: %d ERR\n", i);
-                // Usart1Send(s_buf);
-                kc_state = KC_WAIT_SILENCE_INIT;
-            }
-                
-            LED_OFF;
-            OCODE_OFF;
-        }
-        break;
-
-    case KC_GET_CODE_HT:
-        resp = CodesUpdateTransitionsHT(i, &new_code, &new_lambda);
-                        
-        if (resp == resp_ok)
-        {
-            sprintf(s_buf, "code: 0x%x lambda: %d bits: %d HT\n",
-                    new_code,
-                    new_lambda,
-                    i);
-
-            // Usart1Send(s_buf);
-            new_code_st->bits = i;
-            new_code_st->code = new_code;
-            new_code_st->lambda = new_lambda;
-
-            kc_state = KC_WAIT_SILENCE_INIT;
-        }
-        else
-        {
-            kc_state = KC_GET_CODE_PT_EV;
-        }
-        break;
-            
-    case KC_GET_CODE_PT_EV:
-        resp = CodesUpdateTransitionsPT_EV(i, &new_code, &new_lambda);
-
-        if (resp == resp_ok)
-        {
-            sprintf(s_buf, "code: 0x%x lambda: %d bits: %d PT or EV\n",
-                    new_code,
-                    new_lambda,
-                    i);
-
-            new_code_st->bits = i;
-            new_code_st->code = new_code;
-            new_code_st->lambda = new_lambda;
-
-            kc_state = KC_WAIT_SILENCE_INIT;
-        }
-        else
-        {
-            sprintf(s_buf, "code error\n");
-        }
-
-        // Usart1Send(s_buf);
-        kc_state = KC_WAIT_SILENCE_INIT;
-        break;
-            
-    default:
-        kc_state = KC_WAIT_SILENCE_INIT;
-        break;
+    case MANAGER_MODE_TIMER:
+	Manager_Timer_SM (code_getted, rx_code);	
+	break;
 
     }
-
-    return resp;
 }
+
+
+void Manager_Key_SM (unsigned char code_getted, rf_rx_codes_t * code)
+{
+    if (!code_getted)
+	return;
+
+    if (code->bits != 24)
+	return;
+
+    // for (int i = 0; i < code->bits; i++)
+    // {
+    // 	Led_On();
+    // 	Wait_ms(250);
+    // 	Led_Off();
+    // 	Wait_ms(250);
+    // }
+
+    // Wait_ms (10000);
+    
+
+    if (!manager_relay_1)
+    {
+	// check relay1 code
+	if ((mem_conf.relay1_code0.code == code->code) ||
+	    (mem_conf.relay1_code1.code == code->code))
+	{
+	    if (Relay_Ch1_Is_On())
+	    {
+		Relay_Ch1_Off();
+		manager_relay_1 = 4000;
+	    }
+	    else
+	    {
+		Relay_Ch1_On();
+		manager_relay_1 = 4000;
+	    }
+	}
+    }
+}
+
+
+void Manager_Pulsed_SM (unsigned char code_getted, rf_rx_codes_t * rx_code)
+{
+    
+}
+
+
+void Manager_Switch_SM (unsigned char code_getted, rf_rx_codes_t * rx_code)
+{
+    
+}
+
+
+void Manager_Timer_SM (unsigned char code_getted, rf_rx_codes_t * rx_code)
+{
+    
+}
+
+
+void Manager_Key_SM_Reset (void)
+{
+}
+
+void Manager_Pulsed_SM_Reset (void)
+{
+}
+
+void Manager_Switch_SM_Reset (void)
+{
+}
+
+void Manager_Timer_SM_Reset (void)
+{
+}
+
 
 //--- end of file ---//

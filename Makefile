@@ -78,7 +78,8 @@ SRC += ./src/tim.c
 SRC += ./src/hard.c
 SRC += ./src/manager.c
 SRC += ./src/codes.c
-SRC += ./src/programing.c
+SRC += ./src/programming.c
+SRC += ./src/rf_rx_codes.c
 SRC += ./src/test_functions.c
 
 

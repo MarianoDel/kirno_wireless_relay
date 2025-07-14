@@ -4,12 +4,13 @@
 // ## @Editor: Emacs - ggtags
 // ## @TAGS:   Global
 // ##
-// #### PROGRAMING.H #################################
+// #### PROGRAMMING.H #################################
 //------------------------------------------------------
-#ifndef _PROGRAMING_H_
-#define _PROGRAMING_H_
+#ifndef _PROGRAMMING_H_
+#define _PROGRAMMING_H_
 
 // Additional Includes for Configuration ---------------------------------------
+#include "switches_answers.h"
 
 
 // Defines for Configuration ---------------------------------------------------
@@ -21,30 +22,20 @@ typedef struct {
     unsigned int code;
     unsigned short lambda;
     
-} programing_codes_t;
+} programming_codes_t;
 
 
-typedef enum {
-    PROG_INIT = 0,
-    PROG_SAVE_B1,
-    PROG_SAVE_B1_WAIT_FREE,
-    PROG_SAVE_B2,
-    PROG_SAVE_B2_WAIT_FREE,
-    PROG_SAVE_B3,
-    PROG_SAVE_B3_WAIT_FREE,
-    PROG_SAVE_B4,
-    PROG_SAVE_B4_WAIT_FREE,
-    PROG_CHANGE_MODE
-
-} programing_sm_t;
-
-
-
-
+#define PROG_UTILS_FULL_FLAG    0x80
+#define PROG_UTILS_CHANGE_FLAG    0x40
+#define PROG_UTILS_END_FLAG    0x20
 // Exported Module Functions ---------------------------------------------------
-void Programing (void);
+void Programing_Utils_Reset (unsigned char how_many_options);
+unsigned char Programming_Utils (void);
+void Programming_Timeouts (void);
+resp_t Programming (void);
+void Programming_Reset (void);
 
 
-#endif    /* _PROGRAMING_H_ */
+#endif    /* _PROGRAMMING_H_ */
 
 //--- end of file ---//

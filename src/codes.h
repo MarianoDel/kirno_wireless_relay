@@ -36,13 +36,6 @@
 #define SIZEOF_BUFF_TRANS	64
 
 
-typedef enum {
-    resp_continue = 0,
-    resp_ok,
-    resp_error
-    
-} resp_t;
-
 //Wait States
 typedef enum {
 	CW_INIT = 0,

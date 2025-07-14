@@ -42,15 +42,8 @@
 
 
 // Externals -------------------------------------------------------------------
-extern volatile unsigned char timer_1seg;
-extern volatile unsigned short timer_led_comm;
-extern volatile unsigned short timer_standby;
 extern volatile unsigned short wait_ms_var;
-extern volatile short v_samples1[];
-extern volatile short v_samples2[];
-extern volatile unsigned char update_samples;
-extern volatile unsigned char buff_in_use;
-extern volatile unsigned short v_pwm[];
+
 
 
 // Globals ---------------------------------------------------------------------

@@ -36,6 +36,7 @@ typedef enum {
 
 
 // Exported Module Functions ---------------------------------------------------
+void Manager_Timeouts (void);
 void Manager (void);
 
 
