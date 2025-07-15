@@ -167,15 +167,15 @@ void Manager_Change_Relay (unsigned char code_getted,
 }
 
 
-void Manager_Key_SM (unsigned char code_getted, rf_rx_codes_t * code)
+void Manager_Key_SM (unsigned char code_getted, rf_rx_codes_t * check_code)
 {
     if (!code_getted)
 	return;
 
-    if (code->bits != 24)
+    if (check_code->bits != 24)
 	return;
 
-    // for (int i = 0; i < code->bits; i++)
+    // for (int i = 0; i < check_code->bits; i++)
     // {
     // 	Led_On();
     // 	Wait_ms(250);
@@ -186,11 +186,12 @@ void Manager_Key_SM (unsigned char code_getted, rf_rx_codes_t * code)
     // Wait_ms (10000);
     
 
+    // relay 1
     if (!manager_relay_1)
     {
 	// check relay1 code
-	if ((mem_conf.relay1_code0.code == code->code) ||
-	    (mem_conf.relay1_code1.code == code->code))
+	if ((mem_conf.relay1_code0.code == check_code->code) ||
+	    (mem_conf.relay1_code1.code == check_code->code))
 	{
 	    if (Relay_Ch1_Is_On())
 	    {
@@ -201,6 +202,66 @@ void Manager_Key_SM (unsigned char code_getted, rf_rx_codes_t * code)
 	    {
 		Relay_Ch1_On();
 		manager_relay_1 = 4000;
+	    }
+	}
+    }
+
+    // relay 2
+    if (!manager_relay_2)
+    {
+	// check relay2 code
+	if ((mem_conf.relay2_code0.code == check_code->code) ||
+	    (mem_conf.relay2_code1.code == check_code->code))
+	{
+	    if (Relay_Ch2_Is_On())
+	    {
+		Relay_Ch2_Off();
+		manager_relay_2 = 4000;
+	    }
+	    else
+	    {
+		Relay_Ch2_On();
+		manager_relay_2 = 4000;
+	    }
+	}
+    }
+
+    // relay 3
+    if (!manager_relay_3)
+    {
+	// check relay3 code
+	if ((mem_conf.relay3_code0.code == check_code->code) ||
+	    (mem_conf.relay3_code1.code == check_code->code))
+	{
+	    if (Relay_Ch3_Is_On())
+	    {
+		Relay_Ch3_Off();
+		manager_relay_3 = 4000;
+	    }
+	    else
+	    {
+		Relay_Ch3_On();
+		manager_relay_3 = 4000;
+	    }
+	}
+    }
+
+    // relay 4
+    if (!manager_relay_4)
+    {
+	// check relay4 code
+	if ((mem_conf.relay4_code0.code == check_code->code) ||
+	    (mem_conf.relay4_code1.code == check_code->code))
+	{
+	    if (Relay_Ch4_Is_On())
+	    {
+		Relay_Ch4_Off();
+		manager_relay_4 = 4000;
+	    }
+	    else
+	    {
+		Relay_Ch4_On();
+		manager_relay_4 = 4000;
 	    }
 	}
     }

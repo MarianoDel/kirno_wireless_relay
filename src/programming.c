@@ -49,6 +49,8 @@ volatile unsigned short prog_timer = 0;
 
 
 // Private Module Functions ----------------------------------------------------
+void Programming_Relay_With_Code (unsigned char relay,
+				  rf_rx_codes_t * code_to_save);
 // resp_t Programing_Codes (programing_codes_t *);
 
 
@@ -86,7 +88,8 @@ resp_t Programming (void)
 	// Hard_Led_Blinking_Update ();
 	relay_on_programming = Programming_Utils ();
 
-	if (relay_on_programming != 0)    // verificar esto
+	if ((relay_on_programming > 0) &&
+	    (relay_on_programming < 5))
 	{
 	    // if we have the button check the codes
 	    // rx codes
@@ -94,32 +97,17 @@ resp_t Programming (void)
             
 	    if (answer == resp_ok)
 	    {
-		// evaluate the code
 		if (my_codes.bits == 24)
 		{
-		    if (mem_conf.relay1_actual_code == 0)
-		    {
-			mem_conf.relay1_code0.code = my_codes.code;
-			mem_conf.relay1_code0.bits = my_codes.bits;
-			mem_conf.relay1_code0.lambda = my_codes.lambda;
-			//next code in pos1
-			mem_conf.relay1_actual_code = 1;
-		    }
-		    else
-		    {
-			mem_conf.relay1_code1.code = my_codes.code;
-			mem_conf.relay1_code1.bits = my_codes.bits;
-			mem_conf.relay1_code1.lambda = my_codes.lambda;
-			//next code in pos0
-			mem_conf.relay1_actual_code = 0;			
-		    }
-		}
+		    Programming_Relay_With_Code (relay_on_programming,
+						 &my_codes);
 
-		prog_state = PROG_DONE;
-		prog_timer = 3000;
-		Hard_Led_Change_Bips (1, 100, 1);
-		answer = resp_continue;
+		    prog_state = PROG_DONE;
+		    prog_timer = 3000;
+		    Hard_Led_Change_Bips (1, 100, 1);
+		}
 	    }
+	    answer = resp_continue;
 	}
 	    
 	if (resp & PROG_UTILS_FULL_FLAG)
@@ -245,5 +233,88 @@ unsigned char Programming_Utils (void)
     return resp;
 }
 
+
+void Programming_Relay_With_Code (unsigned char relay,
+				  rf_rx_codes_t * code_to_save)
+{
+    switch(relay)
+    {
+    case 1:
+	if (mem_conf.relay1_actual_code == 0)
+	{
+	    mem_conf.relay1_code0.code = code_to_save->code;
+	    mem_conf.relay1_code0.bits = code_to_save->bits;
+	    mem_conf.relay1_code0.lambda = code_to_save->lambda;
+	    //next code in pos1
+	    mem_conf.relay1_actual_code = 1;
+	}
+	else
+	{
+	    mem_conf.relay1_code1.code = code_to_save->code;
+	    mem_conf.relay1_code1.bits = code_to_save->bits;
+	    mem_conf.relay1_code1.lambda = code_to_save->lambda;
+	    //next code in pos0
+	    mem_conf.relay1_actual_code = 0;			
+	}
+	break;
+
+    case 2:
+	if (mem_conf.relay2_actual_code == 0)
+	{
+	    mem_conf.relay2_code0.code = code_to_save->code;
+	    mem_conf.relay2_code0.bits = code_to_save->bits;
+	    mem_conf.relay2_code0.lambda = code_to_save->lambda;
+	    //next code in pos1
+	    mem_conf.relay2_actual_code = 1;
+	}
+	else
+	{
+	    mem_conf.relay2_code1.code = code_to_save->code;
+	    mem_conf.relay2_code1.bits = code_to_save->bits;
+	    mem_conf.relay2_code1.lambda = code_to_save->lambda;
+	    //next code in pos0
+	    mem_conf.relay2_actual_code = 0;			
+	}
+	break;
+
+    case 3:
+	if (mem_conf.relay3_actual_code == 0)
+	{
+	    mem_conf.relay3_code0.code = code_to_save->code;
+	    mem_conf.relay3_code0.bits = code_to_save->bits;
+	    mem_conf.relay3_code0.lambda = code_to_save->lambda;
+	    //next code in pos1
+	    mem_conf.relay3_actual_code = 1;
+	}
+	else
+	{
+	    mem_conf.relay3_code1.code = code_to_save->code;
+	    mem_conf.relay3_code1.bits = code_to_save->bits;
+	    mem_conf.relay3_code1.lambda = code_to_save->lambda;
+	    //next code in pos0
+	    mem_conf.relay3_actual_code = 0;			
+	}
+	break;
+
+    case 4:
+	if (mem_conf.relay4_actual_code == 0)
+	{
+	    mem_conf.relay4_code0.code = code_to_save->code;
+	    mem_conf.relay4_code0.bits = code_to_save->bits;
+	    mem_conf.relay4_code0.lambda = code_to_save->lambda;
+	    //next code in pos1
+	    mem_conf.relay4_actual_code = 1;
+	}
+	else
+	{
+	    mem_conf.relay4_code1.code = code_to_save->code;
+	    mem_conf.relay4_code1.bits = code_to_save->bits;
+	    mem_conf.relay4_code1.lambda = code_to_save->lambda;
+	    //next code in pos0
+	    mem_conf.relay4_actual_code = 0;			
+	}
+	break;
+    }
+}
 
 //--- end of file ---//
