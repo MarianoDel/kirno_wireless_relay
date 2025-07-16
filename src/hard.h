@@ -42,14 +42,14 @@
 //GPIOA pin5    NC
 
 //GPIOA pin6
-#define ACT_CH1    ((GPIOA->ODR & 0x0040) == 0)
-#define ACT_CH1_OFF    (GPIOA->BSRR = 0x00000040)
-#define ACT_CH1_ON    (GPIOA->BSRR = 0x00400000)
+#define ACT_CH1    ((GPIOA->ODR & 0x0040) != 0)
+#define ACT_CH1_ON    (GPIOA->BSRR = 0x00000040)
+#define ACT_CH1_OFF    (GPIOA->BSRR = 0x00400000)
 
 //GPIOA pin7
-#define ACT_CH2    ((GPIOA->ODR & 0x0080) == 0)
-#define ACT_CH2_OFF    (GPIOA->BSRR = 0x00000080)
-#define ACT_CH2_ON    (GPIOA->BSRR = 0x00800000)
+#define ACT_CH2    ((GPIOA->ODR & 0x0080) != 0)
+#define ACT_CH2_ON    (GPIOA->BSRR = 0x00000080)
+#define ACT_CH2_OFF    (GPIOA->BSRR = 0x00800000)
 
 //GPIOA pin8
 //GPIOA pin9

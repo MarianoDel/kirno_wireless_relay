@@ -18,8 +18,9 @@
 // Exported Macros and Constants -----------------------------------------------
 typedef struct {
     unsigned char bits;
-    unsigned int code;
+    unsigned char dummy;    
     unsigned short lambda;
+    unsigned int code;    
     
 } manager_codes_t;
 

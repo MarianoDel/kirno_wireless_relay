@@ -43,7 +43,6 @@ extern parameters_typedef mem_conf;
 
 // Globals ---------------------------------------------------------------------
 manager_sm_e manager_state = MANAGER_INIT;
-unsigned char manager_mode = 0;
 
 volatile unsigned short manager_millis_relay_1 = 0;
 volatile unsigned short manager_millis_relay_2 = 0;
@@ -98,7 +97,7 @@ void Manager (void)
 	switch (manager_state)
 	{
 	case MANAGER_INIT:
-	    Hard_Led_Change_Bips ((manager_mode + 1), 200, 4000);
+	    Hard_Led_Change_Bips ((mem_conf.manager_mode + 1), 200, 4000);
 	    Manager_Funcs_Reset ();
 	    code_getted = 0;
 	    
@@ -112,7 +111,7 @@ void Manager (void)
 	    if (resp == resp_ok)
 		code_getted = 1;
 
-	    Manager_Change_Relay (code_getted, manager_mode, &new_code);
+	    Manager_Change_Relay (code_getted, mem_conf.manager_mode, &new_code);
 	    code_getted = 0;
 	    
 	    if (Check_Sw_Learn() > SW_NO)
@@ -123,7 +122,7 @@ void Manager (void)
 	    break;
 	    
 	case MANAGER_PROGRAMMING:
-	    resp = Programming (&manager_mode);
+	    resp = Programming (&mem_conf.manager_mode);
 	    if (resp == resp_ok)
 	    {
 		manager_state = MANAGER_INIT;
@@ -542,7 +541,7 @@ void Manager_Funcs_Reset (void)
     Relay_Ch2_Off();
     Relay_Ch3_Off();
     Relay_Ch4_Off();
-
+    
     // reset millis timers
     manager_millis_relay_1 = 0;
     manager_millis_relay_2 = 0;

@@ -15,6 +15,7 @@
 #include "codes.h"
 #include "rf_rx_codes.h"
 #include "parameters.h"
+#include "flash_program.h"
 
 
 #include <stdio.h>
@@ -27,6 +28,7 @@ typedef enum {
     PROG_BUTTONS,
     PROG_GO_TO_MODES,
     PROG_MODES,
+    PROG_WRITE_CONFIG,
     PROG_DONE
 
 } programming_states_e;
@@ -52,7 +54,6 @@ volatile unsigned short prog_timer = 0;
 // Private Module Functions ----------------------------------------------------
 void Programming_Relay_With_Code (unsigned char relay,
 				  rf_rx_codes_t * code_to_save);
-// resp_t Programing_Codes (programing_codes_t *);
 
 
 // Module Functions ------------------------------------------------------------
@@ -87,7 +88,6 @@ resp_t Programming (unsigned char * mode_to_change)
 	break;
 	    
     case PROG_BUTTONS:
-	// Hard_Led_Blinking_Update ();
 	relay_on_programming = Programming_Utils ();
 
 	if ((relay_on_programming > 0) &&
@@ -104,9 +104,7 @@ resp_t Programming (unsigned char * mode_to_change)
 		    Programming_Relay_With_Code (relay_on_programming,
 						 &my_codes);
 
-		    prog_state = PROG_DONE;
-		    prog_timer = 3000;
-		    Hard_Led_Change_Bips (1, 100, 1);
+		    prog_state = PROG_WRITE_CONFIG;
 		}
 	    }
 	    answer = resp_continue;
@@ -123,7 +121,7 @@ resp_t Programming (unsigned char * mode_to_change)
 	{
 	    prog_state = PROG_DONE;
 	    prog_timer = 3000;
-	    Hard_Led_Change_Bips (1, 300, 1);		
+	    Hard_Led_Change_Bips (1, 400, 100);
 	}
 	break;
 	    
@@ -139,8 +137,6 @@ resp_t Programming (unsigned char * mode_to_change)
 	break;
 
     case PROG_MODES:
-	// Hard_Led_Blinking_Update ();
-	// resp = Programming_Utils ();
 	mode_on_programming = Programming_Utils ();	
 	
 	if (mode_on_programming & PROG_UTILS_CHANGE_FLAG)
@@ -170,10 +166,20 @@ resp_t Programming (unsigned char * mode_to_change)
 		else
 		    *mode_to_change = (mode_on_programming - 1);
 	    }
-	    prog_state = PROG_DONE;
-	    prog_timer = 3000;
-	    Hard_Led_Change_Bips (1, 100, 1);
+	    prog_state = PROG_WRITE_CONFIG;
 	}
+	break;
+
+    case PROG_WRITE_CONFIG:
+	relay_on_programming = WriteConfigurations();
+
+	if (relay_on_programming == PASSED)
+	    Hard_Led_Change_Bips (1, 100, 1);
+	else
+	    Hard_Led_Change_Bips (1, 400, 100);
+
+	prog_state = PROG_DONE;
+	prog_timer = 3000;
 	break;
 
     case PROG_DONE:
@@ -185,7 +191,7 @@ resp_t Programming (unsigned char * mode_to_change)
 	    answer = resp_ok;
 	}
 	break;
-	    
+	
     default:
 	prog_state = PROG_INIT;
 	break;

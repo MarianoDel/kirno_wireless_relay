@@ -36,12 +36,13 @@ parameters_typedef mem_conf;
 
 
 // Globals ---------------------------------------------------------------------
+parameters_typedef * pmem = (parameters_typedef *) (unsigned int *) FLASH_PAGE_FOR_BKP;	//en flash
 
 
 // Module Functions ------------------------------------------------------------
 void SysTickError (void);
 void TimingDelay_Decrement(void);
-
+void Factory_Defaults (void);
 
 
 //-------------------------------------------//
@@ -69,6 +70,10 @@ int main(void)
     TIM_16_Init();
 
     // check memory params or get default
+    if (pmem->manager_mode != 0xff)
+	memcpy (&mem_conf, pmem, sizeof(mem_conf));
+    else
+	Factory_Defaults();
     
     while (1)
     {
@@ -77,7 +82,21 @@ int main(void)
 
     return 0;
 }
+
 //--- End of Main ---//
+
+
+void Factory_Defaults (void)
+{
+    mem_conf.secs_relays = 60;
+    
+    mem_conf.relay1_actual_code = 0;
+    mem_conf.relay2_actual_code = 0;
+    mem_conf.relay3_actual_code = 0;
+    mem_conf.relay4_actual_code = 0;
+
+    mem_conf.manager_mode = 0;
+}
 
 
 // One_ms Interrupt
@@ -92,20 +111,6 @@ void TimingDelay_Decrement(void)
 
     Manager_Timeouts ();
     
-    // if (wait_for_code_timeout)
-    //     wait_for_code_timeout--;
-
-    // //cuenta 1 segundo
-    // if (button_timer_internal)
-    //     button_timer_internal--;
-    // else
-    // {
-    //     if (button_timer_secs)
-    //     {
-    //         button_timer_secs--;
-    //         button_timer_internal = 1000;
-    //     }
-    // }
 }
 
 
