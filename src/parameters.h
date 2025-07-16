@@ -29,6 +29,8 @@ typedef struct parameters {
     manager_codes_t relay4_code0;
     manager_codes_t relay4_code1;
     unsigned char relay4_actual_code;    
+
+    unsigned short secs_relays;
     
 } parameters_typedef;
 

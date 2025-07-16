@@ -32,7 +32,7 @@ typedef struct {
 void Programing_Utils_Reset (unsigned char how_many_options);
 unsigned char Programming_Utils (void);
 void Programming_Timeouts (void);
-resp_t Programming (void);
+resp_t Programming (unsigned char * mode_to_change);
 void Programming_Reset (void);
 
 

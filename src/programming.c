@@ -18,6 +18,7 @@
 
 
 #include <stdio.h>
+#include <string.h>
 
 
 // Module Private Types Constants and Macros -----------------------------------
@@ -69,11 +70,12 @@ void Programming_Reset (void)
 }
 
 
-resp_t Programming (void)
+resp_t Programming (unsigned char * mode_to_change)
 {
     resp_t answer = resp_continue;
-    unsigned char resp = 0;
+    // unsigned char resp = 0;
     unsigned char relay_on_programming = 0;
+    unsigned char mode_on_programming = 0;    
     rf_rx_codes_t my_codes;
     
     switch (prog_state)
@@ -110,7 +112,7 @@ resp_t Programming (void)
 	    answer = resp_continue;
 	}
 	    
-	if (resp & PROG_UTILS_FULL_FLAG)
+	if (relay_on_programming & PROG_UTILS_FULL_FLAG)
 	{
 	    prog_state = PROG_GO_TO_MODES;
 	    prog_timer = 3000;
@@ -137,19 +139,37 @@ resp_t Programming (void)
 	break;
 
     case PROG_MODES:
-	Hard_Led_Blinking_Update ();
-	resp = Programming_Utils ();
-
-	if (resp & PROG_UTILS_END_FLAG)
+	// Hard_Led_Blinking_Update ();
+	// resp = Programming_Utils ();
+	mode_on_programming = Programming_Utils ();	
+	
+	if (mode_on_programming & PROG_UTILS_CHANGE_FLAG)
 	    prog_timer = 20000;
 
-	if (resp & PROG_UTILS_FULL_FLAG)
+	if (mode_on_programming & PROG_UTILS_FULL_FLAG)
 	{
 	    // back to main prog
 	}
 
 	if (!prog_timer)
 	{
+	    if ((mode_on_programming > 0) &&
+		(mode_on_programming < 6))
+	    {
+		if (mode_on_programming == 5)
+		{
+		    //reset all mem
+		    memset(&mem_conf, '\0', sizeof(mem_conf));
+		    *mode_to_change = 0;
+		}
+		else if (mode_on_programming == 4)
+		{
+		    mem_conf.secs_relays = 60;
+		    *mode_to_change = 3;
+		}
+		else
+		    *mode_to_change = (mode_on_programming - 1);
+	    }
 	    prog_state = PROG_DONE;
 	    prog_timer = 3000;
 	    Hard_Led_Change_Bips (1, 100, 1);
@@ -200,6 +220,9 @@ unsigned char Programming_Utils (void)
 	if (Check_Sw_Learn() == SW_NO)
 	    prog_utils_state = UTILS_SAVE_KEY;
 
+	if (Check_Sw_Learn() == SW_FULL)
+	    resp |= PROG_UTILS_FULL_FLAG;
+	
 	break;
 	    
     case UTILS_SAVE_KEY:
