@@ -3,11 +3,9 @@
 // ## @Author: Med
 // ## @Editor: Emacs - ggtags
 // ## @TAGS:   Global
-// ## @CPU:    STM32F103
 // ##
 // #### CODES.H ################################
 //---------------------------------------------
-
 #ifndef CODES_H_
 #define CODES_H_
 
@@ -72,11 +70,8 @@ typedef enum {
 
 } CodeStateRX_t;
 
+
 //--- Funciones del Modulo ---
-unsigned char SendCode16 (unsigned int, unsigned char, unsigned short);
-unsigned char SendCode16FixLambda (unsigned int, unsigned char, unsigned short, unsigned short);
-unsigned char SendCode16WithPilot (unsigned int, unsigned char, unsigned short, unsigned short);
-void SendCode16Reset (void);
 resp_t CodesRecvCode16 (unsigned char *);
 resp_t CodesRecvCode16Ones (unsigned char *);
 void CodesRecvCode16Reset (void);

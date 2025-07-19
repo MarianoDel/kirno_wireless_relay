@@ -4,7 +4,7 @@
 // ## @Editor: Emacs - ggtags
 // ## @TAGS:   Global
 // ##
-// #### PROGRAMING.C #################################
+// #### PROGRAMMING.C #################################
 //------------------------------------------------------
 
 // Includes --------------------------------------------------------------------
@@ -156,6 +156,7 @@ resp_t Programming (unsigned char * mode_to_change)
 		{
 		    //reset all mem
 		    memset(&mem_conf, '\0', sizeof(mem_conf));
+		    mem_conf.secs_relays = 60;
 		    *mode_to_change = 0;
 		}
 		else if (mode_on_programming == 4)
@@ -345,5 +346,6 @@ void Programming_Relay_With_Code (unsigned char relay,
 	break;
     }
 }
+
 
 //--- end of file ---//

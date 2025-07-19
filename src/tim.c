@@ -12,7 +12,7 @@
 #include "tim.h"
 #include "hard.h"
 #include "stm32f0xx.h"
-#include "rws317.h"
+#include "det_ac.h"
 
 
 // Module Private Types Constants and Macros -----------------------------------
@@ -50,111 +50,40 @@ extern volatile unsigned short wait_ms_var;
 
 
 // Module Functions ------------------------------------------------------------
-
 void Update_TIM1_CH1 (unsigned short a)
 {
-	TIM1->CCR1 = a;
+    TIM1->CCR1 = a;
 }
+
 
 void Update_TIM3_CH1 (unsigned short a)
 {
-	TIM3->CCR1 = a;
+    TIM3->CCR1 = a;
 }
+
 
 void Update_TIM3_CH2 (unsigned short a)
 {
-	TIM3->CCR2 = a;
+    TIM3->CCR2 = a;
 }
+
 
 void Wait_ms (unsigned short wait)
 {
-	wait_ms_var = wait;
-
-	while (wait_ms_var);
+    wait_ms_var = wait;
+    while (wait_ms_var);
 }
+
 
 void TIM3_IRQHandler (void)	//1 ms
 {
-
-	// Usart_Time_1ms ();
-
-	// if (timer_1seg)
-	// {
-	// 	if (timer_1000)
-	// 		timer_1000--;
-	// 	else
-	// 	{
-	// 		timer_1seg--;
-	// 		timer_1000 = 1000;
-	// 	}
-	// }
-
-	// if (timer_led_comm)
-	// 	timer_led_comm--;
-
-	// if (timer_standby)
-	// 	timer_standby--;
-
-	//bajar flag
-	if (TIM3->SR & 0x01)	//bajo el flag
-		TIM3->SR = 0x00;
+    if (TIM3->SR & 0x01)	//bajo el flag
+	TIM3->SR = 0x00;
 }
+
 
 // void TIM1_BRK_UP_TRG_COM_IRQHandler (void)	//16KHz
 // {
-// 	//cuando arranca siempre in_buff == 1;
-// 	if (buff_in_use == 1)
-// 	{
-// 		if (new_sample < 16)
-// 		{
-// 			//v_pwm[new_sample] = (v_samples1[new_sample] >> 7) + 256;
-// 			//TIM1->CCR1 = v_pwm[new_sample];
-// 			TIM1->CCR1 = (v_samples1[new_sample] >> 7) + 256;
-// 			new_sample++;
-// 		}
-// 		else
-// 		{
-// 			//tengo que cambiar de buffer
-// 			buff_in_use = 2;
-// 			update_samples++;
-// 			TIM1->CCR1 = (v_samples2[0] >> 7) + 256;
-// 			new_sample = 1;
-// 		}
-// 	}
-// 	else if (buff_in_use == 2)
-// 	{
-// 		if (new_sample < 16)
-// 		{
-// 			//v_pwm[new_sample] = (v_samples2[new_sample] >> 7) + 256;
-// 			//TIM1->CCR1 = v_pwm[new_sample];
-// 			TIM1->CCR1 = (v_samples2[new_sample] >> 7) + 256;
-// 			new_sample++;
-// 		}
-// 		else
-// 		{
-// 			//tengo que cambiar de buffer
-// 			buff_in_use = 1;
-// 			update_samples++;
-// 			//v_pwm[0] = (v_samples1[0] >> 7) + 256;
-// 			//TIM1->CCR1 = v_pwm[0];
-// 			TIM1->CCR1 = (v_samples1[0] >> 7) + 256;
-// 			new_sample = 1;
-// 		}
-// 	}
-
-
-// 	/*
-// 	if (new_sample < 16)
-// 	{
-// 		TIM1->CCR1 = sin16[new_sample];
-// 		new_sample++;
-// 	}
-// 	else
-// 	{
-// 		TIM1->CCR1 = sin16[0];
-// 		new_sample = 1;
-// 	}
-// 	*/
 // 	//bajar flag
 // 	if (TIM1->SR & 0x01)	//bajo el flag
 // 		TIM1->SR = 0x00;
@@ -165,9 +94,6 @@ void TIM_1_Init (void)
 {
     unsigned long temp;
     
-    // GPIO_InitTypeDef GPIO_InitStructure;
-    // NVIC_InitTypeDef NVIC_InitStructure;
-
     if (!RCC_TIM1_CLK)
         RCC_TIM1_CLK_ON;
 
@@ -188,15 +114,9 @@ void TIM_1_Init (void)
 
     //hab general de OC y estado inhabilitado alto
     //TIM1->BDTR |= TIM_BDTR_MOE;
-    //hab general de OC y estado inhabilitado bajo
-#ifndef USE_DEADTIME_ON_TRANSISTORS
-    // general enable for OC, low disable    
-    TIM1->BDTR |= TIM_BDTR_MOE | TIM_BDTR_OSSI;
-#else
     // general enable for OC, low disable, and dead-time
     // TIM1->BDTR |= TIM_BDTR_MOE | TIM_BDTR_OSSI | 182;    //5us @ 48MHz
     TIM1->BDTR |= TIM_BDTR_MOE | TIM_BDTR_OSSI | (128 + 28);    //3.8us @ 48MHz    
-#endif
 
     TIM1->ARR = TIM1_ARR;
     TIM1->CNT = 0;
@@ -218,12 +138,6 @@ void TIM_1_Init (void)
     temp |= 0x00000002;	//PA8 -> AF2
     GPIOA->AFR[1] = temp;
 
-    //Timer sin Int
-    // NVIC_InitStructure.NVIC_IRQChannel = TIM1_BRK_UP_TRG_COM_IRQn;
-    // NVIC_InitStructure.NVIC_IRQChannelPriority = 1;
-    // NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    // NVIC_Init(&NVIC_InitStructure);
-
     NVIC_EnableIRQ(TIM1_BRK_UP_TRG_COM_IRQn);
     NVIC_SetPriority(TIM1_BRK_UP_TRG_COM_IRQn, 2);
 }
@@ -231,46 +145,42 @@ void TIM_1_Init (void)
 
 void TIM_3_Init (void)
 {
+    if (!RCC_TIM3_CLK)
+	RCC_TIM3_CLK_ON;
 
-	//NVIC_InitTypeDef NVIC_InitStructure;
+    //Configuracion del timer.
+    TIM3->CR1 = 0x00;		//clk int / 1; upcounting
+    TIM3->CR2 = 0x00;		//igual al reset
+    TIM3->CCMR1 = 0x7070;			//CH2 y CH1 output PWM mode 2
+    //TIM3->CCER |= TIM_CCER_CC2E | TIM_CCER_CC1E;	//CH2 y CH1 enable on pin
+    TIM3->CCER |= TIM_CCER_CC2E | TIM_CCER_CC1E |  TIM_CCER_CC1P;	//CH2 y CH1 negado enable on pin
+    TIM3->ARR = TIM3_ARR;
+    TIM3->CNT = 0;
+    TIM3->PSC = 47;	//prescaler divido 48MHz / (1 + 47)
+    //TIM3->PSC = 0;	//prescaler divido 48MHz / (1 + 0)
+    //TIM3->EGR = TIM_EGR_UG;
 
-	if (!RCC_TIM3_CLK)
-		RCC_TIM3_CLK_ON;
-
-	//Configuracion del timer.
-	TIM3->CR1 = 0x00;		//clk int / 1; upcounting
-	TIM3->CR2 = 0x00;		//igual al reset
-	TIM3->CCMR1 = 0x7070;			//CH2 y CH1 output PWM mode 2
-	//TIM3->CCER |= TIM_CCER_CC2E | TIM_CCER_CC1E;	//CH2 y CH1 enable on pin
-	TIM3->CCER |= TIM_CCER_CC2E | TIM_CCER_CC1E |  TIM_CCER_CC1P;	//CH2 y CH1 negado enable on pin
-	TIM3->ARR = TIM3_ARR;
-	TIM3->CNT = 0;
-	TIM3->PSC = 47;	//prescaler divido 48MHz / (1 + 47)
-	//TIM3->PSC = 0;	//prescaler divido 48MHz / (1 + 0)
-	//TIM3->EGR = TIM_EGR_UG;
-
-	// Enable timer ver UDIS
-	//TIM3->DIER |= TIM_DIER_UIE;
-	TIM3->CR1 |= TIM_CR1_CEN;
-
-	//Timer sin Int
-	//NVIC_InitStructure.NVIC_IRQChannel = TIM3_IRQn;
-	//NVIC_InitStructure.NVIC_IRQChannelPriority = 5;
-	//NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-	//NVIC_Init(&NVIC_InitStructure);
+    // Enable timer ver UDIS
+    //TIM3->DIER |= TIM_DIER_UIE;
+    TIM3->CR1 |= TIM_CR1_CEN;
 }
 
+
+///////////////////
+// TIM14 Configs //
+///////////////////
 inline void TIM14_IC_CH1_OFF (void)
 {
-	//desa int
-	//TIM14->DIER |= TIM_DIER_UIE;
-	TIM14->DIER &= 0xFFFD;
+    //desa int
+    //TIM14->DIER |= TIM_DIER_UIE;
+    TIM14->DIER &= 0xFFFD;
 }
+
 
 inline void TIM14_IC_CH1_ON (void)
 {
-	//ena int
-	TIM14->DIER |= TIM_DIER_CC1IE;
+    //ena int
+    TIM14->DIER |= TIM_DIER_CC1IE;
 }
 
 
@@ -282,39 +192,26 @@ void TIM14_IC_CNT (unsigned short new_counter)
 
 void TIM14_IRQHandler (void)	//100uS
 {
-	//reload or overcaptured
-	if (((TIM14->SR & 0x01) != 0) || ((TIM14->SR & 0x20) != 0))
-		TIM14->SR = 0x00;	//bajar flag
+    //reload or overcaptured
+    if (((TIM14->SR & 0x01) != 0) || ((TIM14->SR & 0x20) != 0))
+	TIM14->SR = 0x00;	//bajar flag
 
-	//IC OJO puede ser error
-	if ((TIM14->SR & 0x02) != 0)
-	{
-		//ver pag 356
-		// Timer_Interrupt_Handler (TIM14->CCR1);
-		TIM14->SR = 0x00;
-	}
+    //IC OJO puede ser error
+    if ((TIM14->SR & 0x02) != 0)
+    {
+	//ver pag 356
+	// Timer_Interrupt_Handler (TIM14->CCR1);
+	TIM14->SR = 0x00;
+    }
 }
 
 
 void TIM_14_Init (void)
 {
     unsigned long temp;
-    // GPIO_InitTypeDef GPIO_InitStructure;
-    // NVIC_InitTypeDef NVIC_InitStructure;
 
     if (!RCC_TIM14_CLK)
         RCC_TIM14_CLK_ON;
-
-    // /* Connect PXx to TIM14_CH1 */
-    // GPIO_PinAFConfig(TIM14_CH1_GPIO_PORT, TIM14_CH1_SOURCE, TIM14_CH1_AF);
-
-    // /* Configure TIM1 CH1N and CH1 as alternate function push-pull */
-    // GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-    // GPIO_InitStructure.GPIO_Speed = GPIO_Speed_Level_3;
-    // GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;
-    // GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-    // GPIO_InitStructure.GPIO_Pin = TIM14_CH1_PIN;
-    // GPIO_Init(TIM14_CH1_GPIO_PORT, &GPIO_InitStructure);
 
     //Configuracion del timer.
     //TIM14->ARR = 2000; //10m
@@ -344,29 +241,20 @@ void TIM_14_Init (void)
     TIM14->DIER |= TIM_DIER_CC1IE;
     TIM14->CR1 |= TIM_CR1_CEN;
 
-    // NVIC_InitStructure.NVIC_IRQChannel = TIM14_IRQn;
-    // NVIC_InitStructure.NVIC_IRQChannelPriority = 0;
-    // NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    // NVIC_Init(&NVIC_InitStructure);
     NVIC_EnableIRQ(TIM14_IRQn);
     NVIC_SetPriority(TIM14_IRQn, 1);
 }
 
-void TIM16_IRQHandler (void)	//100uS
-{
 
-	if (TIM16->SR & 0x01)
-		//bajar flag
-		TIM16->SR = 0x00;
-}
-
-
+///////////////////
+// TIM16 Configs //
+///////////////////
 void TIM_16_Init (void)
 {
     if (!RCC_TIM16_CLK)
         RCC_TIM16_CLK_ON;
 
-    //Configuracion del timer.
+    // Timer config
     TIM16->ARR = 0xFFFF;
     TIM16->CNT = 0;
     TIM16->PSC = 47;
@@ -377,42 +265,65 @@ void TIM_16_Init (void)
     TIM16->CR1 |= TIM_CR1_CEN;
 }
 
-void TIM17_IRQHandler (void)	//100uS
+
+void TIM16_IRQHandler (void)
 {
+    if (TIM16->SR & 0x01)
+	TIM16->SR = 0x00;    // low flag
+}
 
-	//if (GPIOA_PIN0_OUT)
-	//	GPIOA_PIN0_OFF;
-	//else
-	//	GPIOA_PIN0_ON;
 
-	if (TIM17->SR & 0x01)
-		//bajar flag
-		TIM17->SR = 0x00;
+///////////////////
+// TIM17 Configs //
+///////////////////
+void TIM17_IRQHandler (void)
+{
+    if (TIM17->SR & 0x01)
+    {
+	TIM17->SR = 0x00;    // low int flag
+
+	Det_Ac_Int_Handler();
+    }
 }
 
 
 void TIM_17_Init (void)
 {
+    if (!RCC_TIM17_CLK)
+	RCC_TIM17_CLK_ON;
 
-	// NVIC_InitTypeDef NVIC_InitStructure;
+    // Timer configs
+    TIM17->ARR = 0;
+    TIM17->CNT = 0;
+    TIM17->PSC = 479;    // tick every 100us
+    TIM17->EGR = TIM_EGR_UG;
 
-	// if (!RCC_TIM17_CLK)
-	// 	RCC_TIM17_CLK_ON;
+    // ARR reload with buffer; one pulse mode
+    TIM17->CR1 |= TIM_CR1_OPM | TIM_CR1_URS;
+    // TIM17->CR1 |= TIM_CR1_URS;    
 
-	// //Configuracion del timer.
-	// TIM17->ARR = 2000; //10m
-	// TIM17->CNT = 0;
-	// TIM17->PSC = 479;
-	// TIM17->EGR = TIM_EGR_UG;
+    // Enable timer ver UDIS
+    TIM17->DIER |= TIM_DIER_UIE;
+    // TIM17->CR1 |= TIM_CR1_CEN;
 
-	// // Enable timer ver UDIS
-	// TIM17->DIER |= TIM_DIER_UIE;
-	// TIM17->CR1 |= TIM_CR1_CEN;
-
-	// NVIC_InitStructure.NVIC_IRQChannel = TIM17_IRQn;
-	// NVIC_InitStructure.NVIC_IRQChannelPriority = 5;
-	// NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-	// NVIC_Init(&NVIC_InitStructure);
+    NVIC_EnableIRQ(TIM17_IRQn);
+    NVIC_SetPriority(TIM17_IRQn, 8);    
 }
 
+
+void TIM_17_Activate_With_Arr (unsigned short new_arr)
+{
+    TIM17->CNT = 0;
+    TIM17->ARR = new_arr;
+    TIM17->EGR = TIM_EGR_UG;
+    TIM17->CR1 |= TIM_CR1_CEN;
+}
+
+
+void TIM_17_Deact (void)
+{
+    // TIM17->ARR = 0;
+    // TIM17->CNT = 0;
+    // TIM17->CR1 &= ~(TIM_CR1_CEN);
+}
 //--- end of file ---//

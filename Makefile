@@ -73,7 +73,6 @@ SRC += ./src/it.c
 SRC += ./src/gpio.c
 SRC += ./src/tim.c
 # SRC += ./src/usart.c
-# SRC += ./src/rws317.c
 SRC += ./src/flash_program.c
 SRC += ./src/hard.c
 SRC += ./src/manager.c
@@ -81,6 +80,7 @@ SRC += ./src/codes.c
 SRC += ./src/programming.c
 SRC += ./src/rf_rx_codes.c
 SRC += ./src/test_functions.c
+SRC += ./src/det_ac.c
 
 
 ## Core Support

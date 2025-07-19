@@ -44,9 +44,8 @@ void Update_TIM1_CH1 (unsigned short);
 
 void Wait_ms (unsigned short wait);
 
-void Ampli_to_Audio (void);
-void Ampli_to_Sirena (void);
-void LoadSine(short *);
+void TIM_17_Activate_With_Arr (unsigned short new_arr);
+void TIM_17_Deact (void);
 
 #define CodeInterruptDisa() TIM14_IC_CH1_OFF()
 #define CodeInterruptEna() TIM14_IC_CH1_ON()

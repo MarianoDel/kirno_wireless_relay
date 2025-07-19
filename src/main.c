@@ -15,7 +15,6 @@
 
 #include "core_cm0.h"
 #include "test_functions.h"
-#include "rws317.h"
 #include "flash_program.h"
 #include "tim.h"
 #include "parameters.h"
@@ -63,9 +62,6 @@ int main(void)
     // TF_Hardware_Tests ();
 
     // --- main program inits. ---
-    // RxCode();    // stop ints
-    TIM_14_Init();
-
     // para rx codes?
     TIM_16_Init();
 
@@ -74,10 +70,13 @@ int main(void)
 	memcpy (&mem_conf, pmem, sizeof(mem_conf));
     else
 	Factory_Defaults();
-    
+
+    Det_Ac_Init();
     while (1)
     {
-	Manager();
+	Hard_Det_AC_Update ();
+
+	// Manager();
     }
 
     return 0;
@@ -85,11 +84,10 @@ int main(void)
 
 //--- End of Main ---//
 
-
 void Factory_Defaults (void)
 {
     mem_conf.secs_relays = 60;
-    
+
     mem_conf.relay1_actual_code = 0;
     mem_conf.relay2_actual_code = 0;
     mem_conf.relay3_actual_code = 0;

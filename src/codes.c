@@ -3,11 +3,9 @@
 // ## @Author: Med
 // ## @Editor: Emacs - ggtags
 // ## @TAGS:   Global
-// ## @CPU:    STM32F103
 // ##
 // #### CODES.C ################################
 //---------------------------------------------
-
 #include "codes.h"
 #include "hard.h"
 #include "tim.h"

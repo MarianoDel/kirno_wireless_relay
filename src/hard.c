@@ -8,6 +8,7 @@
 //----------------------------------------------
 #include "hard.h"
 #include "stm32f0xx.h"
+#include "det_ac.h"
 
 
 // Module Private Types & Macros -----------------------------------------------
@@ -39,7 +40,7 @@ unsigned char how_many_blinks = 0;
 unsigned short timer_led_on = 0;
 unsigned short timer_led_off = 0;
 volatile unsigned short timer_led = 0;
-
+volatile unsigned char timer_det_ac = 0;
 
 // Module Private Functions ----------------------------------------------------
 
@@ -86,6 +87,8 @@ void Hard_Timeouts (void)
     else if (s1_cntr)
 	s1_cntr--;
 
+    if (timer_det_ac)
+	timer_det_ac--;
 }
 
 
@@ -242,5 +245,48 @@ unsigned char Relay_Ch4_Is_On (void)
     return ACT_CH4;
 }
 
+
+unsigned char last_det_ac = 0;
+unsigned char det_ac_cnt = 0;
+void Hard_Det_AC_Update (void)
+{
+    unsigned char actual_det_ac = 0;
+    actual_det_ac = DET_AC;
+    
+    // check falling edge on det
+    if ((!actual_det_ac) && (last_det_ac))
+    {
+	Led_On();
+	if (det_ac_cnt < 5)
+	    det_ac_cnt++;
+	else
+	    Det_Ac_Act (400);    // 10ms later
+
+	timer_det_ac = 22;
+    }
+
+    last_det_ac = actual_det_ac;
+
+    if (!timer_det_ac)
+    {
+	if (det_ac_cnt)
+	    det_ac_cnt--;
+	else
+	    Det_Ac_Deact();
+
+	timer_det_ac = 22;
+    }
+}
+
+
+unsigned char Hard_Det_AC_Is_On (void)
+{
+    unsigned char a = 0;
+
+    if (det_ac_cnt == 5)
+	a = 1;
+
+    return a;
+}
 
 //--- end of file ---//
