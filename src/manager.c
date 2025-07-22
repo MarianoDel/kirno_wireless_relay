@@ -66,6 +66,14 @@ void Manager_Timer_Func (unsigned char code_getted, rf_rx_codes_t * check_code);
 
 void Manager_Funcs_Reset (void);
 
+void Manager_Relay_Ch1_On (void);
+void Manager_Relay_Ch2_On (void);
+void Manager_Relay_Ch3_On (void);
+void Manager_Relay_Ch4_On (void);
+void Manager_Relay_Ch1_Off (void);
+void Manager_Relay_Ch2_Off (void);
+void Manager_Relay_Ch3_Off (void);
+void Manager_Relay_Ch4_Off (void);
 
 // Module Functions ------------------------------------------------------------
 void Manager_Timeouts (void)
@@ -92,48 +100,48 @@ void Manager (void)
     resp_t resp = resp_continue;
     unsigned char code_getted = 0;
 
-    while (1)
+    switch (manager_state)
     {
-	switch (manager_state)
+    case MANAGER_INIT:
+	Hard_Led_Change_Bips ((mem_conf.manager_mode + 1), 200, 4000);
+	Manager_Funcs_Reset ();
+	code_getted = 0;
+	    
+	manager_state = MANAGER_RUNNING;
+	break;
+
+    case MANAGER_RUNNING:
+	Hard_Led_Blinking_Update ();
+
+	Hard_Det_AC_Update ();	
+
+	resp = Rf_Get_Codes (&new_code);
+	if (resp == resp_ok)
+	    code_getted = 1;
+
+	Manager_Change_Relay (code_getted, mem_conf.manager_mode, &new_code);
+	code_getted = 0;
+	    
+	if (Check_Sw_Learn() > SW_NO)
 	{
-	case MANAGER_INIT:
-	    Hard_Led_Change_Bips ((mem_conf.manager_mode + 1), 200, 4000);
-	    Manager_Funcs_Reset ();
-	    code_getted = 0;
-	    
-	    manager_state = MANAGER_RUNNING;
-	    break;
-
-	case MANAGER_RUNNING:
-	    Hard_Led_Blinking_Update ();
-
-	    resp = Rf_Get_Codes (&new_code);
-	    if (resp == resp_ok)
-		code_getted = 1;
-
-	    Manager_Change_Relay (code_getted, mem_conf.manager_mode, &new_code);
-	    code_getted = 0;
-	    
-	    if (Check_Sw_Learn() > SW_NO)
-	    {
-		Programming_Reset ();
-		manager_state = MANAGER_PROGRAMMING;
-	    }
-	    break;
-	    
-	case MANAGER_PROGRAMMING:
-	    resp = Programming (&mem_conf.manager_mode);
-	    if (resp == resp_ok)
-	    {
-		manager_state = MANAGER_INIT;
-	    }
-	    break;
-
-	default:
-	    manager_state = MANAGER_INIT;
-	    break;
+	    Programming_Reset ();
+	    manager_state = MANAGER_PROGRAMMING;
 	}
+	break;
+	    
+    case MANAGER_PROGRAMMING:
+	resp = Programming (&mem_conf.manager_mode);
+	if (resp == resp_ok)
+	{
+	    manager_state = MANAGER_INIT;
+	}
+	break;
+
+    default:
+	manager_state = MANAGER_INIT;
+	break;
     }
+    
 }
 
 
@@ -190,15 +198,11 @@ void Manager_Key_Func (unsigned char code_getted, rf_rx_codes_t * check_code)
 	    (mem_conf.relay1_code1.code == check_code->code))
 	{
 	    if (Relay_Ch1_Is_On())
-	    {
-		Relay_Ch1_Off();
-		manager_millis_relay_1 = 4000;
-	    }
+		Manager_Relay_Ch1_Off();
 	    else
-	    {
-		Relay_Ch1_On();
-		manager_millis_relay_1 = 4000;
-	    }
+		Manager_Relay_Ch1_On();
+
+	    manager_millis_relay_1 = 4000;	    
 	}
     }
 
@@ -210,15 +214,11 @@ void Manager_Key_Func (unsigned char code_getted, rf_rx_codes_t * check_code)
 	    (mem_conf.relay2_code1.code == check_code->code))
 	{
 	    if (Relay_Ch2_Is_On())
-	    {
-		Relay_Ch2_Off();
-		manager_millis_relay_2 = 4000;
-	    }
+		Manager_Relay_Ch2_Off();		
 	    else
-	    {
-		Relay_Ch2_On();
-		manager_millis_relay_2 = 4000;
-	    }
+		Manager_Relay_Ch2_On();
+
+	    manager_millis_relay_2 = 4000;	    
 	}
     }
 
@@ -230,15 +230,11 @@ void Manager_Key_Func (unsigned char code_getted, rf_rx_codes_t * check_code)
 	    (mem_conf.relay3_code1.code == check_code->code))
 	{
 	    if (Relay_Ch3_Is_On())
-	    {
-		Relay_Ch3_Off();
-		manager_millis_relay_3 = 4000;
-	    }
+		Manager_Relay_Ch3_Off();		
 	    else
-	    {
-		Relay_Ch3_On();
-		manager_millis_relay_3 = 4000;
-	    }
+		Manager_Relay_Ch3_On();
+
+	    manager_millis_relay_3 = 4000;
 	}
     }
 
@@ -250,15 +246,11 @@ void Manager_Key_Func (unsigned char code_getted, rf_rx_codes_t * check_code)
 	    (mem_conf.relay4_code1.code == check_code->code))
 	{
 	    if (Relay_Ch4_Is_On())
-	    {
-		Relay_Ch4_Off();
-		manager_millis_relay_4 = 4000;
-	    }
+		Manager_Relay_Ch4_Off();
 	    else
-	    {
-		Relay_Ch4_On();
-		manager_millis_relay_4 = 4000;
-	    }
+		Manager_Relay_Ch4_On();
+	    
+	    manager_millis_relay_4 = 4000;
 	}
     }
 }
@@ -273,7 +265,7 @@ void Manager_Pulsed_Func (unsigned char code_getted, rf_rx_codes_t * check_code)
 	if ((mem_conf.relay1_code0.code == check_code->code) ||
 	    (mem_conf.relay1_code1.code == check_code->code))
 	{
-	    Relay_Ch1_On();
+	    Manager_Relay_Ch1_On();
 	    manager_millis_relay_1 = 2000;
 	}
 
@@ -281,7 +273,7 @@ void Manager_Pulsed_Func (unsigned char code_getted, rf_rx_codes_t * check_code)
 	if ((mem_conf.relay2_code0.code == check_code->code) ||
 	    (mem_conf.relay2_code1.code == check_code->code))
 	{
-	    Relay_Ch2_On();
+	    Manager_Relay_Ch2_On();	    
 	    manager_millis_relay_2 = 2000;
 	}
 
@@ -289,7 +281,7 @@ void Manager_Pulsed_Func (unsigned char code_getted, rf_rx_codes_t * check_code)
 	if ((mem_conf.relay3_code0.code == check_code->code) ||
 	    (mem_conf.relay3_code1.code == check_code->code))
 	{
-	    Relay_Ch3_On();
+	    Manager_Relay_Ch3_On();
 	    manager_millis_relay_3 = 2000;
 	}
 
@@ -297,7 +289,7 @@ void Manager_Pulsed_Func (unsigned char code_getted, rf_rx_codes_t * check_code)
 	if ((mem_conf.relay4_code0.code == check_code->code) ||
 	    (mem_conf.relay4_code1.code == check_code->code))
 	{
-	    Relay_Ch4_On();
+	    Manager_Relay_Ch4_On();	    
 	    manager_millis_relay_4 = 2000;
 	}
     }
@@ -306,28 +298,28 @@ void Manager_Pulsed_Func (unsigned char code_getted, rf_rx_codes_t * check_code)
     if ((Relay_Ch1_Is_On()) &&
 	(!manager_millis_relay_1))
     {
-	Relay_Ch1_Off();
+	Manager_Relay_Ch1_Off();
     }
 
     // relay 2 free
     if ((Relay_Ch2_Is_On()) &&
 	(!manager_millis_relay_2))
     {
-	Relay_Ch2_Off();
+	Manager_Relay_Ch2_Off();	
     }
 
     // relay 3 free
     if ((Relay_Ch3_Is_On()) &&
 	(!manager_millis_relay_3))
     {
-	Relay_Ch3_Off();
+	Manager_Relay_Ch3_Off();
     }
 
     // relay 4 free
     if ((Relay_Ch4_Is_On()) &&
 	(!manager_millis_relay_4))
     {
-	Relay_Ch4_Off();
+	Manager_Relay_Ch4_Off();	
     }
 }
 
@@ -348,18 +340,15 @@ void Manager_Switch_Func (unsigned char code_getted, rf_rx_codes_t * check_code)
 	    (mem_conf.relay1_code1.code == check_code->code))
 	{
 	    if (Relay_Ch1_Is_On())
-	    {
-		Relay_Ch1_Off();
-		manager_millis_relay_1 = 4000;
-	    }
+		Manager_Relay_Ch1_Off();
 	    else
 	    {
-		Relay_Ch1_On();
-		Relay_Ch2_Off();
-		Relay_Ch3_Off();	
-		Relay_Ch4_Off();	
-		manager_millis_relay_1 = 4000;
+		Manager_Relay_Ch1_On();
+		Manager_Relay_Ch2_Off();
+		Manager_Relay_Ch3_Off();
+		Manager_Relay_Ch4_Off();		
 	    }
+	    manager_millis_relay_1 = 4000;	    
 	}
     }
 
@@ -371,18 +360,15 @@ void Manager_Switch_Func (unsigned char code_getted, rf_rx_codes_t * check_code)
 	    (mem_conf.relay2_code1.code == check_code->code))
 	{
 	    if (Relay_Ch2_Is_On())
-	    {
-		Relay_Ch2_Off();
-		manager_millis_relay_2 = 4000;
-	    }
+		Manager_Relay_Ch2_Off();
 	    else
 	    {
-		Relay_Ch2_On();
-		Relay_Ch1_Off();
-		Relay_Ch3_Off();	
-		Relay_Ch4_Off();	
-		manager_millis_relay_2 = 4000;
+		Manager_Relay_Ch2_On();		
+		Manager_Relay_Ch1_Off();
+		Manager_Relay_Ch3_Off();
+		Manager_Relay_Ch4_Off();		
 	    }
+	    manager_millis_relay_2 = 4000;
 	}
     }
 
@@ -394,18 +380,15 @@ void Manager_Switch_Func (unsigned char code_getted, rf_rx_codes_t * check_code)
 	    (mem_conf.relay3_code1.code == check_code->code))
 	{
 	    if (Relay_Ch3_Is_On())
-	    {
-		Relay_Ch3_Off();
-		manager_millis_relay_3 = 4000;
-	    }
+		Manager_Relay_Ch3_Off();		
 	    else
 	    {
-		Relay_Ch3_On();
-		Relay_Ch1_Off();
-		Relay_Ch2_Off();	
-		Relay_Ch4_Off();			
-		manager_millis_relay_3 = 4000;
+		Manager_Relay_Ch3_On();
+		Manager_Relay_Ch1_Off();
+		Manager_Relay_Ch2_Off();
+		Manager_Relay_Ch4_Off();		
 	    }
+	    manager_millis_relay_3 = 4000;
 	}
     }
 
@@ -417,18 +400,15 @@ void Manager_Switch_Func (unsigned char code_getted, rf_rx_codes_t * check_code)
 	    (mem_conf.relay4_code1.code == check_code->code))
 	{
 	    if (Relay_Ch4_Is_On())
-	    {
-		Relay_Ch4_Off();
-		manager_millis_relay_4 = 4000;
-	    }
+		Manager_Relay_Ch4_Off();
 	    else
 	    {
-		Relay_Ch4_On();
-		Relay_Ch1_Off();
-		Relay_Ch2_Off();	
-		Relay_Ch3_Off();
-		manager_millis_relay_4 = 4000;
+		Manager_Relay_Ch4_On();
+		Manager_Relay_Ch1_Off();
+		Manager_Relay_Ch2_Off();
+		Manager_Relay_Ch3_Off();
 	    }
+	    manager_millis_relay_4 = 4000;	
 	}
     }    
 }
@@ -443,7 +423,7 @@ void Manager_Timer_Func (unsigned char code_getted, rf_rx_codes_t * check_code)
 	if ((mem_conf.relay1_code0.code == check_code->code) ||
 	    (mem_conf.relay1_code1.code == check_code->code))
 	{
-	    Relay_Ch1_On();
+	    Manager_Relay_Ch1_On();
 	    manager_millis_relay_1 = 1000;
 	    manager_secs_relay_1 = mem_conf.secs_relays;
 	}
@@ -452,7 +432,7 @@ void Manager_Timer_Func (unsigned char code_getted, rf_rx_codes_t * check_code)
 	if ((mem_conf.relay2_code0.code == check_code->code) ||
 	    (mem_conf.relay2_code1.code == check_code->code))
 	{
-	    Relay_Ch2_On();
+	    Manager_Relay_Ch2_On();	    
 	    manager_millis_relay_2 = 1000;
 	    manager_secs_relay_2 = mem_conf.secs_relays;	    
 	}
@@ -461,7 +441,7 @@ void Manager_Timer_Func (unsigned char code_getted, rf_rx_codes_t * check_code)
 	if ((mem_conf.relay3_code0.code == check_code->code) ||
 	    (mem_conf.relay3_code1.code == check_code->code))
 	{
-	    Relay_Ch3_On();
+	    Manager_Relay_Ch3_On();
 	    manager_millis_relay_3 = 1000;
 	    manager_secs_relay_3 = mem_conf.secs_relays;	    
 	}
@@ -470,7 +450,7 @@ void Manager_Timer_Func (unsigned char code_getted, rf_rx_codes_t * check_code)
 	if ((mem_conf.relay4_code0.code == check_code->code) ||
 	    (mem_conf.relay4_code1.code == check_code->code))
 	{
-	    Relay_Ch4_On();
+	    Manager_Relay_Ch4_On();	    
 	    manager_millis_relay_4 = 1000;
 	    manager_secs_relay_4 = mem_conf.secs_relays;	    
 	}
@@ -486,7 +466,7 @@ void Manager_Timer_Func (unsigned char code_getted, rf_rx_codes_t * check_code)
 	}
 	else if (Relay_Ch1_Is_On())
 	{
-	    Relay_Ch1_Off();	    
+	    Manager_Relay_Ch1_Off();	    
 	}
     }
 
@@ -500,7 +480,7 @@ void Manager_Timer_Func (unsigned char code_getted, rf_rx_codes_t * check_code)
 	}
 	else if (Relay_Ch2_Is_On())
 	{
-	    Relay_Ch2_Off();	    
+	    Manager_Relay_Ch2_Off();
 	}
     }
 
@@ -514,7 +494,7 @@ void Manager_Timer_Func (unsigned char code_getted, rf_rx_codes_t * check_code)
 	}
 	else if (Relay_Ch3_Is_On())
 	{
-	    Relay_Ch3_Off();	    
+	    Manager_Relay_Ch3_Off();
 	}
     }
 
@@ -528,7 +508,7 @@ void Manager_Timer_Func (unsigned char code_getted, rf_rx_codes_t * check_code)
 	}
 	else if (Relay_Ch4_Is_On())
 	{
-	    Relay_Ch4_Off();	    
+	    Manager_Relay_Ch4_Off();
 	}
     }
 }
@@ -553,6 +533,78 @@ void Manager_Funcs_Reset (void)
     manager_secs_relay_2 = 0;
     manager_secs_relay_3 = 0;
     manager_secs_relay_4 = 0;        
+}
+
+
+void Manager_Relay_Ch1_On (void)
+{
+    if (Hard_Det_AC_Is_On())
+	Hard_Act_Relay_In_Sync(0);
+    else
+	Relay_Ch1_On();
+}
+
+
+void Manager_Relay_Ch2_On (void)
+{
+    if (Hard_Det_AC_Is_On())
+	Hard_Act_Relay_In_Sync(1);
+    else
+	Relay_Ch2_On();
+}
+
+
+void Manager_Relay_Ch3_On (void)
+{
+    if (Hard_Det_AC_Is_On())
+	Hard_Act_Relay_In_Sync(2);
+    else
+	Relay_Ch3_On();
+}
+
+
+void Manager_Relay_Ch4_On (void)
+{
+    if (Hard_Det_AC_Is_On())
+	Hard_Act_Relay_In_Sync(3);
+    else
+	Relay_Ch4_On();
+}
+
+
+void Manager_Relay_Ch1_Off (void)
+{
+    if (Hard_Det_AC_Is_On())
+	Hard_Deact_Relay_In_Sync(0);
+    else
+	Relay_Ch1_Off();
+}
+
+
+void Manager_Relay_Ch2_Off (void)
+{
+    if (Hard_Det_AC_Is_On())
+	Hard_Deact_Relay_In_Sync(1);
+    else
+	Relay_Ch2_Off();
+}
+
+
+void Manager_Relay_Ch3_Off (void)
+{
+    if (Hard_Det_AC_Is_On())
+	Hard_Deact_Relay_In_Sync(2);
+    else
+	Relay_Ch3_Off();
+}
+
+
+void Manager_Relay_Ch4_Off (void)
+{
+    if (Hard_Det_AC_Is_On())
+	Hard_Deact_Relay_In_Sync(3);
+    else
+	Relay_Ch4_Off();
 }
 
 //--- end of file ---//

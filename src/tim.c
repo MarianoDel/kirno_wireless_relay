@@ -282,6 +282,7 @@ void TIM17_IRQHandler (void)
     {
 	TIM17->SR = 0x00;    // low int flag
 
+	// Hard_Ac_Int_Handler();
 	Det_Ac_Int_Handler();
     }
 }

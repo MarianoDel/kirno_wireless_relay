@@ -13,7 +13,6 @@
 #include "hard.h"
 #include "gpio.h"
 
-#include "core_cm0.h"
 #include "test_functions.h"
 #include "flash_program.h"
 #include "tim.h"
@@ -21,16 +20,15 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "it.h"
 
-
-#include "rf_rx_codes.h"
 #include "manager.h"
 #include "programming.h"
+#include "det_ac.h"
 
 
 // Externals -------------------------------------------------------------------
 volatile unsigned short wait_ms_var = 0;
+volatile unsigned short timer_standby = 0;
 parameters_typedef mem_conf;
 
 
@@ -72,11 +70,12 @@ int main(void)
 	Factory_Defaults();
 
     Det_Ac_Init();
+
     while (1)
     {
-	Hard_Det_AC_Update ();
 
-	// Manager();
+	Manager();
+
     }
 
     return 0;
@@ -103,6 +102,9 @@ void TimingDelay_Decrement(void)
     if (wait_ms_var)
         wait_ms_var--;
 
+    if (timer_standby)
+        timer_standby--;
+    
     Hard_Timeouts ();
 
     Programming_Timeouts ();

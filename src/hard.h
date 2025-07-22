@@ -113,6 +113,12 @@ unsigned char Relay_Ch2_Is_On (void);
 unsigned char Relay_Ch3_Is_On (void);
 unsigned char Relay_Ch4_Is_On (void);
 
+void Hard_Det_AC_Update (void);
+unsigned char Hard_Det_AC_Is_On (void);
+void Hard_Act_Relay_In_Sync (unsigned char relay_num);
+void Hard_Deact_Relay_In_Sync (unsigned char relay_num);
+void Hard_Ac_Int_Handler_Disconnect (void);
+void Hard_Ac_Int_Handler_Connect (void);    
 
 #endif /* _HARD_H_ */
 

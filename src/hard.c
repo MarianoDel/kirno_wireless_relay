@@ -42,6 +42,7 @@ unsigned short timer_led_off = 0;
 volatile unsigned short timer_led = 0;
 volatile unsigned char timer_det_ac = 0;
 
+
 // Module Private Functions ----------------------------------------------------
 
 
@@ -256,13 +257,13 @@ void Hard_Det_AC_Update (void)
     // check falling edge on det
     if ((!actual_det_ac) && (last_det_ac))
     {
-	Led_On();
 	if (det_ac_cnt < 5)
 	    det_ac_cnt++;
 	else
-	    Det_Ac_Act (400);    // 10ms later
+	    Det_Ac_Edge_Detect();
 
-	timer_det_ac = 22;
+	timer_det_ac = 32;
+
     }
 
     last_det_ac = actual_det_ac;
@@ -271,10 +272,8 @@ void Hard_Det_AC_Update (void)
     {
 	if (det_ac_cnt)
 	    det_ac_cnt--;
-	else
-	    Det_Ac_Deact();
 
-	timer_det_ac = 22;
+	timer_det_ac = 32;
     }
 }
 
@@ -288,5 +287,74 @@ unsigned char Hard_Det_AC_Is_On (void)
 
     return a;
 }
+
+
+volatile unsigned char to_connect_relay = 0;
+volatile unsigned char to_disconnect_relay = 0;
+// it can be called more than once before the relay can act.
+void Hard_Act_Relay_In_Sync (unsigned char relay_num)
+{
+    unsigned char rel_flag = 0;
+    
+    if (relay_num > 3)
+	return;
+
+    rel_flag = (1 << relay_num);
+    to_connect_relay |= rel_flag;
+}
+
+
+// it can be called more than once before the relay can act.
+void Hard_Deact_Relay_In_Sync (unsigned char relay_num)
+{
+    unsigned char rel_flag = 0;
+    
+    if (relay_num > 3)
+	return;
+
+    rel_flag = (1 << relay_num);
+    to_disconnect_relay |= rel_flag;
+}
+
+
+void Hard_Ac_Int_Handler_Disconnect (void)
+{
+    unsigned int rel_conn_disconn = 0;
+    
+    // first stage disconnect
+    // relay 1 in PA6 relay 2 in PA7
+    rel_conn_disconn = to_disconnect_relay & 0x03;    // only ch2 ch1
+    rel_conn_disconn <<= (6 + 16);
+    GPIOA->BSRR = rel_conn_disconn;
+
+    // relay 3 in PB0 relay 4 in PB1	
+    rel_conn_disconn = to_disconnect_relay & 0x0c;    // only ch3 ch2
+    rel_conn_disconn <<= (-2 + 16);
+    GPIOB->BSRR = rel_conn_disconn;
+
+    to_disconnect_relay = 0;
+
+}
+
+
+void Hard_Ac_Int_Handler_Connect (void)
+{
+    unsigned int rel_conn_disconn = 0;
+    
+    // second stage connect
+    // relay 1 in PA6 relay 2 in PA7
+    rel_conn_disconn = to_connect_relay & 0x03;    // only ch2 ch1
+    rel_conn_disconn <<= 6;
+    GPIOA->BSRR = rel_conn_disconn;
+
+    // relay 3 in PB0 relay 4 in PB1	
+    rel_conn_disconn = to_connect_relay & 0x0c;    // only ch3 ch2
+    rel_conn_disconn >>= 2;
+    GPIOB->BSRR = rel_conn_disconn;
+
+    to_connect_relay = 0;
+    
+}
+
 
 //--- end of file ---//

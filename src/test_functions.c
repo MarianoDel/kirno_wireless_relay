@@ -16,6 +16,7 @@
 #include "gpio.h"
 #include "usart.h"
 #include "tim.h"
+#include "det_ac.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -28,6 +29,9 @@ extern volatile unsigned short timer_standby;
 // extern volatile unsigned char rx_int_handler;
 // extern volatile unsigned char usart3_have_data;
 
+extern void Manager_Relay_Ch1_On (void);
+extern void Manager_Relay_Ch1_Off (void);
+
 
 // Globals ---------------------------------------------------------------------
 
@@ -35,13 +39,15 @@ extern volatile unsigned short timer_standby;
 // Module Private Functions ----------------------------------------------------
 void TF_Led (void);
 void TF_Led_Sw_Learn_On (void);
-    
+void TF_Relay_In_Sync (void);
+
 
 // Module Functions ------------------------------------------------------------
 void TF_Hardware_Tests (void)
 {
     // TF_Led ();
-    TF_Led_Sw_Learn_On ();
+    // TF_Led_Sw_Learn_On ();
+    TF_Relay_In_Sync ();
 }
 
 
@@ -72,5 +78,35 @@ void TF_Led_Sw_Learn_On (void)
     }
 }
 
+
+void TF_Relay_In_Sync (void)
+{
+    unsigned char rel_state = 0;
+
+    Det_Ac_Init();
+
+    timer_standby = 2000;
+
+    while (1)
+    {
+	Hard_Det_AC_Update ();
+
+	if (!timer_standby)
+	{
+	    if (rel_state == 0)
+	    {
+		timer_standby = 8000;
+		rel_state = 1;
+		Manager_Relay_Ch1_On();
+	    }
+	    else if (rel_state == 1)
+	    {
+		timer_standby = 8000;
+		rel_state = 0;
+		Manager_Relay_Ch1_Off();
+	    }
+	}	
+    }
+}
 
 //--- end of file ---//

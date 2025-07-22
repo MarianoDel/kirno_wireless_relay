@@ -18,6 +18,7 @@
 void Det_Ac_Init (void);
 void Det_Ac_Act (unsigned short new_arr);
 void Det_Ac_Deact (void);
+void Det_Ac_Edge_Detect (void);
 void Det_Ac_Int_Handler (void);
 
 
